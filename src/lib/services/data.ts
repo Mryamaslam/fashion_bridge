@@ -64,22 +64,12 @@ export async function getProducts(
   page = 1,
   pageSize = 12
 ): Promise<PaginatedResponse<Product>> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    let query = supabase.from("products").select("*", { count: "exact" });
-    if (filters.search) query = query.or(`name.ilike.%${filters.search}%,sku.ilike.%${filters.search}%`);
-    if (filters.status) query = query.eq("status", filters.status);
-    else query = query.eq("status", "active");
-    const { data, count } = await query.range((page - 1) * pageSize, page * pageSize - 1);
-    return {
-      data: (data as Product[]) || [],
-      total: count || 0,
-      page,
-      pageSize,
-      totalPages: Math.ceil((count || 0) / pageSize),
-    };
-  }
-  const filtered = filterProducts(mockProducts.filter((p) => p.status === "active"), filters);
+  // Public catalog always reads the same inventory as admin (Supabase or in-memory mock).
+  const all = await getAllProducts();
+  const base = filters.status
+    ? all.filter((p) => p.status === filters.status)
+    : all.filter((p) => p.status === "active");
+  const filtered = filterProducts(base, filters);
   return paginate(filtered, page, pageSize);
 }
 
@@ -239,10 +229,14 @@ export function getCategoryName(categoryId: string | null): string | undefined {
   return mockCategories.find((c) => c.id === categoryId)?.name;
 }
 
-export function getProductsByCollection(collectionId: string): Product[] {
-  return mockProducts.filter((p) => p.collection_id === collectionId && p.status === "active");
+/** Active products in a collection — same inventory source as admin. */
+export async function getProductsByCollection(collectionId: string): Promise<Product[]> {
+  const products = await getAllProducts();
+  return products.filter((p) => p.collection_id === collectionId && p.status === "active");
 }
 
-export function getFeaturedProducts(limit = 4): Product[] {
-  return mockProducts.filter((p) => p.is_featured && p.status === "active").slice(0, limit);
+/** Featured active products for homepage — same inventory source as admin. */
+export async function getFeaturedProducts(limit = 4): Promise<Product[]> {
+  const products = await getAllProducts();
+  return products.filter((p) => p.is_featured && p.status === "active").slice(0, limit);
 }

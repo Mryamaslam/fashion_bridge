@@ -117,7 +117,7 @@ export const SIZES = [
   // Waist (jeans / shorts)
   "24", "26", "28", "30", "32", "34", "36", "38", "40", "42",
   // Footwear (EU)
-  "37", "39", "41", "43", "44", "45",
+  "36", "37", "39", "41", "43", "44", "45",
   // Accessories / packs
   "One Size", "S/M", "L/XL",
 ] as const;

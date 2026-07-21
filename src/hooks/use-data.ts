@@ -88,7 +88,11 @@ export function useProductMutations() {
       if (!res.ok) throw new Error("Failed to create product");
       return res.json();
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-products"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    },
   });
 
   const update = useMutation({
@@ -101,7 +105,11 @@ export function useProductMutations() {
       if (!res.ok) throw new Error("Failed to update product");
       return res.json();
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-products"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    },
   });
 
   const remove = useMutation({
@@ -109,7 +117,11 @@ export function useProductMutations() {
       const res = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete product");
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-products"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    },
   });
 
   return { create, update, remove };

@@ -23,7 +23,7 @@ export default async function CollectionDetailPage({ params }: Props) {
   const collection = await getCollectionBySlug(slug);
   if (!collection) notFound();
 
-  const products = getProductsByCollection(collection.id);
+  const products = await getProductsByCollection(collection.id);
   const getCategoryName = (id: string | null) =>
     mockCategories.find((c) => c.id === id)?.name;
 

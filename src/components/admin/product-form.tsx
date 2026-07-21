@@ -54,7 +54,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
       sizes: [],
       colors: [],
       images: [],
-      status: "draft",
+      status: "active",
       is_featured: false,
       price: 0,
       wholesale_price: 0,
@@ -86,7 +86,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
         </div>
         <div className="space-y-2">
           <Label>Status</Label>
-          <Select defaultValue={product?.status || "draft"} onValueChange={(v) => setValue("status", v as ProductFormData["status"])}>
+          <Select defaultValue={product?.status || "active"} onValueChange={(v) => setValue("status", v as ProductFormData["status"])}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="active">Active</SelectItem>

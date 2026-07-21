@@ -28,8 +28,11 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 const heroSlides = IMAGES.hero;
 
 export default async function HomePage() {
-  const featuredProducts = getFeaturedProducts(4);
-  const collections = (await getCollections()).slice(0, 3);
+  const [featuredProducts, collections] = await Promise.all([
+    getFeaturedProducts(4),
+    getCollections(),
+  ]);
+  const featuredCollections = collections.slice(0, 3);
 
   return (
     <>
@@ -194,7 +197,7 @@ export default async function HomePage() {
         <div className="container mx-auto px-4">
           <SectionHeader label="Collections" title="Seasonal Collections" description="Curated product lines for every season and style." />
           <div className="grid gap-6 md:grid-cols-3">
-            {collections.map((col) => (
+            {featuredCollections.map((col) => (
               <CollectionCard key={col.id} collection={col} />
             ))}
           </div>
