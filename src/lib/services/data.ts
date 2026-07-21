@@ -62,7 +62,7 @@ function filterProducts(products: Product[], filters: ProductFilters): Product[]
 export async function getProducts(
   filters: ProductFilters = {},
   page = 1,
-  pageSize = 12
+  pageSize = 24
 ): Promise<PaginatedResponse<Product>> {
   // Public catalog always reads the same inventory as admin (Supabase or in-memory mock).
   const all = await getAllProducts();

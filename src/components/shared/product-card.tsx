@@ -61,6 +61,17 @@ export function ProductCard({ product, categoryName, className }: ProductCardPro
             </Link>
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">SKU: {product.sku}</p>
+          {product.colors?.length > 0 && (
+            <p className="mt-2 text-xs text-muted-foreground line-clamp-1">
+              Colors: {product.colors.join(", ")}
+            </p>
+          )}
+          {product.sizes?.length > 0 && (
+            <p className="text-xs text-muted-foreground line-clamp-1">
+              Sizes: {product.sizes.slice(0, 8).join(", ")}
+              {product.sizes.length > 8 ? "…" : ""}
+            </p>
+          )}
           <div className="mt-3 flex items-center justify-between">
             <div>
               <p className="text-lg font-bold">{formatCurrency(product.wholesale_price, currency.code)}</p>
