@@ -110,8 +110,19 @@ export const STATS = [
   { value: 10000, suffix: "+", label: "Monthly Units" },
 ] as const;
 
-export const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"] as const;
+/** Must match product.sizes exactly — used by /products filters + admin form */
+export const SIZES = [
+  // Apparel
+  "XS", "S", "M", "L", "XL", "XXL", "3XL",
+  // Waist (jeans / shorts)
+  "24", "26", "28", "30", "32", "34", "36", "38", "40", "42",
+  // Footwear (EU)
+  "37", "39", "41", "43", "44", "45",
+  // Accessories / packs
+  "One Size", "S/M", "L/XL",
+] as const;
 
+/** Must match product.colors exactly — used by /products filters + admin form */
 export const COLORS = [
   "Black",
   "White",
