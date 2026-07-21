@@ -1,7 +1,7 @@
 "use client";
 
 import Image, { type ImageProps } from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { IMAGES } from "@/lib/constants/images";
 
@@ -17,8 +17,14 @@ export function SafeImage({
   className,
   ...props
 }: SafeImageProps) {
-  const [imgSrc, setImgSrc] = useState(src || fallback);
+  const resolved = src || fallback;
+  const [imgSrc, setImgSrc] = useState(resolved);
   const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setImgSrc(src || fallback);
+    setHasError(false);
+  }, [src, fallback]);
 
   return (
     <Image
