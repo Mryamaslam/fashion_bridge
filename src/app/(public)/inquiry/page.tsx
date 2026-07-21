@@ -11,21 +11,34 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  searchParams: Promise<{ product?: string; country?: string }>;
+  searchParams: Promise<{ product?: string; country?: string; quantity?: string }>;
 }
 
-async function InquiryContent({ product, country }: { product?: string; country?: string }) {
+async function InquiryContent({
+  product,
+  country,
+  quantity,
+}: {
+  product?: string;
+  country?: string;
+  quantity?: string;
+}) {
+  const qty = quantity ? Number(quantity) : undefined;
   return (
     <Card className="border-gold/20">
       <CardContent className="p-8">
-        <InquiryForm defaultProduct={product} defaultCountry={country} />
+        <InquiryForm
+          defaultProduct={product}
+          defaultCountry={country}
+          defaultQuantity={qty && !Number.isNaN(qty) ? qty : undefined}
+        />
       </CardContent>
     </Card>
   );
 }
 
 export default async function InquiryPage({ searchParams }: Props) {
-  const { product, country } = await searchParams;
+  const { product, country, quantity } = await searchParams;
 
   return (
     <>
@@ -43,7 +56,7 @@ export default async function InquiryPage({ searchParams }: Props) {
       <section className="py-16">
         <div className="container mx-auto max-w-3xl px-4">
           <Suspense fallback={<div className="py-20 text-center">Loading form...</div>}>
-            <InquiryContent product={product} country={country} />
+            <InquiryContent product={product} country={country} quantity={quantity} />
           </Suspense>
         </div>
       </section>

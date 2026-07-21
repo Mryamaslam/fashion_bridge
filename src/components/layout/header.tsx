@@ -5,12 +5,13 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Menu, X, ChevronDown, Globe, DollarSign, Sun, Moon,
+  Menu, X, ChevronDown, Globe, DollarSign, Sun, Moon, ShoppingCart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SITE, NAV_LINKS, CURRENCIES, LANGUAGES } from "@/lib/constants/site";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/providers/app-provider";
+import { useCart } from "@/providers/cart-provider";
 import { useTheme } from "next-themes";
 
 export function Header() {
@@ -20,6 +21,7 @@ export function Header() {
   const [langOpen, setLangOpen] = useState(false);
   const [currOpen, setCurrOpen] = useState(false);
   const { currency, language, setCurrency, setLanguage } = useApp();
+  const { itemCount } = useCart();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -174,8 +176,25 @@ export function Header() {
             )}
           </div>
 
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className={cn("relative", !scrolled && isHome && "text-white hover:text-gold hover:bg-white/10")}
+            aria-label="Shopping cart"
+          >
+            <Link href="/cart">
+              <ShoppingCart className="h-5 w-5" />
+              {mounted && itemCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[10px] font-bold text-black">
+                  {itemCount > 99 ? "99+" : itemCount}
+                </span>
+              )}
+            </Link>
+          </Button>
+
           <Button asChild variant="gold" size="sm" className="hidden sm:inline-flex">
-            <Link href="/inquiry">Buyer Inquiry</Link>
+            <Link href="/cart">Cart</Link>
           </Button>
 
           <Button
@@ -218,7 +237,7 @@ export function Header() {
                 </motion.div>
               ))}
               <Button asChild variant="gold" className="mt-4">
-                <Link href="/inquiry">Buyer Inquiry</Link>
+                <Link href="/cart">View Cart{itemCount > 0 ? ` (${itemCount})` : ""}</Link>
               </Button>
             </nav>
           </motion.div>

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { MessageCircle } from "lucide-react";
-import { cn, formatCurrency, getWhatsAppLink } from "@/lib/utils";
+import { ShoppingCart } from "lucide-react";
+import { toast } from "sonner";
+import { cn, formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import { ScaleOnHover } from "@/components/animations/motion";
 import { SafeImage } from "@/components/shared/safe-image";
 import type { Product } from "@/types";
 import { useApp } from "@/providers/app-provider";
-import { SITE } from "@/lib/constants/site";
+import { useCart } from "@/providers/cart-provider";
 import { IMAGES } from "@/lib/constants/images";
 
 interface ProductCardProps {
@@ -21,10 +22,28 @@ interface ProductCardProps {
 
 export function ProductCard({ product, categoryName, className }: ProductCardProps) {
   const { currency } = useApp();
+  const { addItem } = useCart();
   const image = product.images[0] || IMAGES.placeholder;
   const isOutOfStock = product.stock_quantity === 0;
   const isLowStock =
     !isOutOfStock && product.stock_quantity <= product.low_stock_threshold;
+
+  const handleAddToCart = () => {
+    if (isOutOfStock) {
+      toast.error("This product is out of stock");
+      return;
+    }
+    addItem(product);
+    toast.success(`Added ${product.name} to cart`, {
+      description: `MOQ ${product.moq} units added`,
+      action: {
+        label: "View cart",
+        onClick: () => {
+          window.location.href = "/cart";
+        },
+      },
+    });
+  };
 
   return (
     <ScaleOnHover>
@@ -43,11 +62,16 @@ export function ProductCard({ product, categoryName, className }: ProductCardPro
             {isLowStock && <Badge variant="warning">Low Stock</Badge>}
           </div>
           <div className="absolute inset-x-0 bottom-0 translate-y-full bg-gradient-to-t from-black/80 to-transparent p-4 transition-transform duration-300 group-hover:translate-y-0">
-            <Button asChild variant="gold" size="sm" className="w-full">
-              <Link href={`/inquiry?product=${encodeURIComponent(product.name)}`}>
-                <MessageCircle className="mr-1 h-4 w-4" />
-                Send Inquiry
-              </Link>
+            <Button
+              type="button"
+              variant="gold"
+              size="sm"
+              className="w-full"
+              disabled={isOutOfStock}
+              onClick={handleAddToCart}
+            >
+              <ShoppingCart className="mr-1 h-4 w-4" />
+              Add to Cart
             </Button>
           </div>
         </div>
@@ -72,24 +96,21 @@ export function ProductCard({ product, categoryName, className }: ProductCardPro
               {product.sizes.length > 8 ? "…" : ""}
             </p>
           )}
-          <div className="mt-3 flex items-center justify-between">
+          <div className="mt-3 flex items-center justify-between gap-2">
             <div>
               <p className="text-lg font-bold">{formatCurrency(product.wholesale_price, currency.code)}</p>
               <p className="text-xs text-muted-foreground">MOQ: {product.moq} units</p>
             </div>
             <Button
-              asChild
+              type="button"
               variant="outline"
               size="sm"
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              disabled={isOutOfStock}
+              className="shrink-0"
+              onClick={handleAddToCart}
             >
-              <a
-                href={getWhatsAppLink(SITE.whatsapp, `Hi, I'm interested in ${product.name} (${product.sku})`)}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                WhatsApp
-              </a>
+              <ShoppingCart className="mr-1 h-3.5 w-3.5" />
+              Add
             </Button>
           </div>
         </CardContent>

@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { QueryProvider } from "@/providers/query-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { AppProvider } from "@/providers/app-provider";
+import { CartProvider } from "@/providers/cart-provider";
 import { SITE } from "@/lib/constants/site";
 import "./globals.css";
 
@@ -45,8 +46,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <QueryProvider>
             <AppProvider>
-              {children}
-              <Toaster position="top-right" richColors closeButton />
+              <CartProvider>
+                {children}
+                <Toaster position="top-right" richColors closeButton />
+              </CartProvider>
             </AppProvider>
           </QueryProvider>
         </ThemeProvider>

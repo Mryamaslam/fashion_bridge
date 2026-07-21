@@ -18,9 +18,10 @@ import {
 interface InquiryFormProps {
   defaultProduct?: string;
   defaultCountry?: string;
+  defaultQuantity?: number;
 }
 
-export function InquiryForm({ defaultProduct, defaultCountry }: InquiryFormProps) {
+export function InquiryForm({ defaultProduct, defaultCountry, defaultQuantity }: InquiryFormProps) {
   const mutation = useCreateInquiry();
   const {
     register,
@@ -33,7 +34,7 @@ export function InquiryForm({ defaultProduct, defaultCountry }: InquiryFormProps
     defaultValues: {
       product: defaultProduct || "",
       country: defaultCountry || "",
-      quantity: undefined,
+      quantity: defaultQuantity,
     },
   });
 
