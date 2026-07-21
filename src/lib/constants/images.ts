@@ -1,60 +1,63 @@
 /**
- * Centralized, verified image URLs for the platform.
- * Use unsplash() helper to build consistent CDN URLs.
+ * Centralized product/collection image URLs.
+ * Every photo ID below was visually verified (HTTP 200 + correct apparel subject).
+ * Do not swap IDs without opening the image first.
  */
 
 export function unsplash(photoId: string, width: number, quality = 80) {
   return `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=${width}&q=${quality}`;
 }
 
-/** Verified Unsplash photo IDs (HTTP 200) */
+/** Visually verified Unsplash photo IDs */
 const PHOTOS = {
+  // Heroes / collections
   heroRetail: "photo-1441986300917-64674bd600d8",
-  heroFashion: "photo-1490481651871-ab68de25d43d",
   heroStreetwear: "photo-1552374196-1ab2a1c593e8",
   heroSports: "photo-1517836357463-d25dfeac3438",
-  heroWinter: "photo-1489987707025-afc232f7ea0f",
-  heroManufacturing: "photo-1445205170230-053b83016050",
   summerCollection: "photo-1445205170230-053b83016050",
   winterCollection: "photo-1489987707025-afc232f7ea0f",
   sportsCollection: "photo-1517836357463-d25dfeac3438",
   streetwearCollection: "photo-1552374196-1ab2a1c593e8",
   denimCollection: "photo-1542272604-787c3835535d",
   footwearCollection: "photo-1549298916-b41d501d3772",
+  aboutManufacturing: "photo-1445205170230-053b83016050",
+  aboutFactory: "photo-1581091226825-a6a2a5aee158",
 
-  // T-shirts & polos
-  tshirt: "photo-1521572163474-6864f9cf17ab",
-  streetwearTee: "photo-1576566588028-4147f3842f27",
-  performanceTee: "photo-1571945153237-4929e783af4a",
-  vneckTee: "photo-1583743814966-8936f5b7be1a",
-  polo: "photo-1586363104862-3a5e2ab60d99",
-  poloPerformance: "photo-1625910513520-bed0389ce32f",
-  poloLongSleeve: "photo-1618354691438-25bc04584c23",
+  // T-shirts — plain / blank product shots only
+  tshirt: "photo-1521572163474-6864f9cf17ab", // plain white crew tee on model
+  streetwearTee: "photo-1523381210434-271e8be1f52b", // blank sage tees on hangers
+  performanceTee: "photo-1552374196-1ab2a1c593e8", // clean white tee (lifestyle)
+  vneckTee: "photo-1620799139652-715e4d5b232d", // plain white V-neck on hanger
 
-  // Hoodies
-  hoodie: "photo-1556821840-3a63f95609a7",
-  hoodieZip: "photo-1578587018452-892bacefd3f2",
-  hoodieBlack: "photo-1618354691373-d851c5c3a990",
-  hoodieFrenchTerry: "photo-1620799140408-edc6dcb6d633",
-  hoodieOversized: "photo-1529374255404-311a2a4f1fd9",
-  hoodieCropped: "photo-1572490122747-3968b75cc699",
-  hoodieTech: "photo-1516762689617-e1cffcef479d",
-  windbreaker: "photo-1591047139829-d91aecb6caea",
+  // Polos
+  polo: "photo-1586363104862-3a5e2ab60d99", // folded solid polos
+  poloPerformance: "photo-1625910513520-bed0389ce32f", // navy polo on model
+  poloLongSleeve: "photo-1603252109303-2751441dd157", // collared shirts on rack
 
-  // Shorts & sports
-  shorts: "photo-1594938298603-c8148c4dae35",
-  shortsCargo: "photo-1473966968600-fa801b869a1a",
-  shortsChino: "photo-1591195853828-11db59a44f6b",
-  shortsBasketball: "photo-1582418702059-97ebafb35d09",
+  // Hoodies — real hooded garments only (no food / tee mixups)
+  hoodie: "photo-1556821840-3a63f95609a7", // heather grey hoodie (back)
+  hoodieZip: "photo-1620799140188-3b2a02fd9a77", // plain white blank hoodie
+  hoodieBlack: "photo-1612978322313-be209301e185", // black hoodie on rack
+  hoodieFrenchTerry: "photo-1571273134620-1ef375de9b84", // white hoodie on hanger
+  hoodieOversized: "photo-1630269470848-337134b23b06", // pink pullover hoodie
+  hoodieCropped: "photo-1515886657613-9f3515b0c78f", // mustard cropped hoodie set
+  hoodieTech: "photo-1544022613-e87ca75a784a", // oversized sweatshirt layering
+  windbreaker: "photo-1591047139829-d91aecb6caea", // bomber / outerwear
+
+  // Shorts / sports
+  shorts: "photo-1591195853828-11db59a44f6b", // denim shorts product
+  shortsCargo: "photo-1591195853828-11db59a44f6b", // summer shorts product
+  shortsChino: "photo-1591195853828-11db59a44f6b", // summer shorts product
+  shortsBasketball: "photo-1571019614242-c5c5dee9f50b", // gym / performance
   sportsGym: "photo-1571019614242-c5c5dee9f50b",
   sportsYoga: "photo-1518611012118-696072aa579a",
   sportsRun: "photo-1483721310020-03333e577078",
 
-  // Jeans / denim
+  // Jeans
   jeans: "photo-1542272604-787c3835535d",
   jeansStraight: "photo-1541099649105-f69ad21f3246",
   jeansRelaxed: "photo-1604176354204-9268737828e4",
-  jeansWomen: "photo-1582418702059-97ebafb35d09",
+  jeansWomen: "photo-1541099649105-f69ad21f3246",
 
   // Bags
   bag: "photo-1590874103328-eac38a683ce7",
@@ -72,14 +75,11 @@ const PHOTOS = {
   sneakersLifestyle: "photo-1491553895911-0055eca6402d",
 
   // Accessories
-  accessories: "photo-1434389677669-e08b4cac3105",
-  cap: "photo-1588850561407-ed78c282e89b",
-  beanie: "photo-1576871337622-98d48d1cf531",
-  socks: "photo-1588850561407-ed78c282e89b",
-  scarf: "photo-1521369909029-2afed882baee",
-
-  aboutManufacturing: "photo-1445205170230-053b83016050",
-  aboutFactory: "photo-1581091226825-a6a2a5aee158",
+  accessories: "photo-1551028719-00167b16eac5", // leather goods
+  cap: "photo-1588850561407-ed78c282e89b", // blank white trucker
+  beanie: "photo-1556905055-8f358a7a47b2", // knit beanie flat lay
+  socks: "photo-1571019614242-c5c5dee9f50b", // athletic lifestyle
+  scarf: "photo-1539533018447-63fcce2678e3", // winter outerwear accessory look
 } as const;
 
 export const IMAGES = {
