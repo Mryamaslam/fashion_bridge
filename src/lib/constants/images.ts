@@ -52,9 +52,10 @@ const L = {
 } as const;
 
 const PHOTOS = {
-  heroRetail: "photo-1441986300917-64674bd600d8",
-  heroStreetwear: "photo-1552374196-1ab2a1c593e8",
-  heroSports: "photo-1517836357463-d25dfeac3438",
+  heroFashion: "photo-1483985988353-763728e1935b",
+  heroWholesale: "photo-1567401893414-76b7b1e0a279",
+  heroManufacturing: "photo-1617127365659-c47fa864d8bc",
+  heroCatalog: "photo-1441984909226-793344a5a99a",
   summerCollection: "photo-1445205170230-053b83016050",
   winterCollection: "photo-1489987707025-afc232f7ea0f",
   sportsCollection: "photo-1517836357463-d25dfeac3438",
@@ -67,10 +68,11 @@ const PHOTOS = {
 
 export const IMAGES = {
   hero: [
-    { image: unsplash(PHOTOS.heroRetail, 1920), title: "Premium Fashion Export" },
-    { image: unsplash(PHOTOS.heroStreetwear, 1920), title: "Global B2B Partner" },
-    { image: unsplash(PHOTOS.heroSports, 1920), title: "Quality Manufacturing" },
+    { image: unsplash(PHOTOS.heroFashion, 1920), title: "Premium Fashion Export" },
+    { image: unsplash(PHOTOS.heroWholesale, 1920), title: "Wholesale Apparel Worldwide" },
+    { image: unsplash(PHOTOS.heroManufacturing, 1920), title: "Quality Manufacturing" },
   ],
+  heroCatalog: unsplash(PHOTOS.heroCatalog, 1920),
   about: {
     manufacturing: unsplash(PHOTOS.aboutManufacturing, 800),
     factory: unsplash(PHOTOS.aboutFactory, 800),
