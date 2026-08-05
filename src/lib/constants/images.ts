@@ -9,6 +9,7 @@ export function unsplash(photoId: string, width: number, quality = 80) {
 }
 
 const local = (file: string) => `/images/products/${file}`;
+const localCat = (file: string) => `/images/categories/${file}`;
 
 /** Local blank wholesale catalog images — product cards use these only */
 const L = {
@@ -81,6 +82,17 @@ export const IMAGES = {
     streetwear: { banner: unsplash(PHOTOS.streetwearCollection, 1200), thumb: unsplash(PHOTOS.streetwearCollection, 400) },
     denim: { banner: unsplash(PHOTOS.denimCollection, 1200), thumb: unsplash(PHOTOS.denimCollection, 400) },
     footwear: { banner: unsplash(PHOTOS.footwearCollection, 1200), thumb: unsplash(PHOTOS.footwearCollection, 400) },
+  },
+  /** Category tile images — local /images/categories/*.png */
+  categories: {
+    "t-shirts": localCat("t-shirts.png"),
+    "polo-shirts": localCat("polo-shirts.png"),
+    hoodies: localCat("hoodies.png"),
+    shorts: localCat("shorts.png"),
+    jeans: localCat("jeans.png"),
+    bags: localCat("bags.png"),
+    shoes: localCat("shoes.png"),
+    accessories: localCat("accessories.png"),
   },
   /** Every key is a local /images/products/*.png — no Unsplash in product cards */
   products: {

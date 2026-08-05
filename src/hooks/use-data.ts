@@ -6,6 +6,8 @@ import type { ProductFilters, Product, Inquiry } from "@/types";
 export function useProducts(filters: ProductFilters = {}, page = 1) {
   return useQuery({
     queryKey: ["products", filters, page],
+    staleTime: 0,
+    refetchOnMount: "always",
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filters.search) params.set("search", filters.search);
@@ -26,6 +28,8 @@ export function useProducts(filters: ProductFilters = {}, page = 1) {
 export function useAdminProducts() {
   return useQuery({
     queryKey: ["admin-products"],
+    staleTime: 0,
+    refetchOnMount: "always",
     queryFn: async () => {
       const res = await fetch("/api/admin/products");
       if (!res.ok) throw new Error("Failed to fetch products");

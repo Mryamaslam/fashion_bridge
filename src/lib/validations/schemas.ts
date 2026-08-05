@@ -63,3 +63,22 @@ export const loginSchema = z.object({
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
+
+export const orderItemSchema = z.object({
+  productId: z.string().min(1),
+  quantity: z.number().min(1),
+  color: z.string().optional(),
+  size: z.string().optional(),
+});
+
+export const orderSchema = z.object({
+  buyer_name: z.string().min(2, "Name is required"),
+  buyer_email: z.string().email("Invalid email"),
+  buyer_country: z.string().min(2, "Country is required"),
+  buyer_company: z.string().optional(),
+  shipping_address: z.string().optional(),
+  currency: z.string().default("USD"),
+  items: z.array(orderItemSchema).min(1, "Cart is empty"),
+});
+
+export type OrderFormData = z.infer<typeof orderSchema>;

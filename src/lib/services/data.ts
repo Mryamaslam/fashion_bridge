@@ -5,6 +5,7 @@ import {
   mockCategories,
   mockInquiries,
   mockOrders,
+  mockOrderItems,
   mockDashboardStats,
 } from "@/lib/data/mock";
 import type {
@@ -13,6 +14,7 @@ import type {
   Category,
   Inquiry,
   Order,
+  OrderItem,
   ProductFilters,
   DashboardStats,
   PaginatedResponse,
@@ -80,6 +82,155 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     return data as Product | null;
   }
   return mockProducts.find((p) => p.slug === slug) || null;
+}
+
+export async function getProductById(id: string): Promise<Product | null> {
+  const supabase = await getSupabaseServer();
+  if (supabase) {
+    const { data } = await supabase.from("products").select("*").eq("id", id).single();
+    return data as Product | null;
+  }
+  return mockProducts.find((p) => p.id === id) || null;
+}
+
+/** Adjust stock (+/-). Used by orders and admin inventory updates. */
+export async function adjustProductStock(
+  productId: string,
+  delta: number,
+  reason: string
+): Promise<Product> {
+  const supabase = await getSupabaseServer();
+  if (supabase) {
+    const product = await getProductById(productId);
+    if (!product) throw new Error("Product not found");
+    const newQty = Math.max(0, product.stock_quantity + delta);
+    const { data, error } = await supabase
+      .from("products")
+      .update({ stock_quantity: newQty, updated_at: new Date().toISOString() })
+      .eq("id", productId)
+      .select()
+      .single();
+    if (error) throw error;
+    await supabase.from("inventory").insert({
+      product_id: productId,
+      change_amount: delta,
+      previous_quantity: product.stock_quantity,
+      new_quantity: newQty,
+      reason,
+    });
+    return data as Product;
+  }
+
+  const idx = mockProducts.findIndex((p) => p.id === productId);
+  if (idx < 0) throw new Error("Product not found");
+  const previous = mockProducts[idx].stock_quantity;
+  const newQty = Math.max(0, previous + delta);
+  if (delta < 0 && previous + delta < 0) {
+    throw new Error(`Insufficient stock for ${mockProducts[idx].name}`);
+  }
+  mockProducts[idx] = {
+    ...mockProducts[idx],
+    stock_quantity: newQty,
+    updated_at: new Date().toISOString(),
+  };
+  return mockProducts[idx];
+}
+
+export interface CreateOrderInput {
+  buyer_name: string;
+  buyer_email: string;
+  buyer_country: string;
+  buyer_company?: string | null;
+  shipping_address?: string | null;
+  currency?: string;
+  items: { productId: string; quantity: number; color?: string; size?: string }[];
+}
+
+/** Place order and deduct stock from shared inventory (web + admin). */
+export async function createOrderFromCart(input: CreateOrderInput): Promise<Order> {
+  if (!input.items.length) throw new Error("Order must include at least one item");
+
+  const lineItems: OrderItem[] = [];
+  let total = 0;
+
+  for (const item of input.items) {
+    const product = await getProductById(item.productId);
+    if (!product || product.status !== "active") {
+      throw new Error(`Product unavailable: ${item.productId}`);
+    }
+    if (product.stock_quantity < item.quantity) {
+      throw new Error(
+        `Insufficient stock for ${product.name}. Available: ${product.stock_quantity}, requested: ${item.quantity}`
+      );
+    }
+  }
+
+  for (const item of input.items) {
+    const product = (await getProductById(item.productId))!;
+    await adjustProductStock(product.id, -item.quantity, "order placed");
+    const lineTotal = product.wholesale_price * item.quantity;
+    total += lineTotal;
+    lineItems.push({
+      id: `${Date.now()}-${item.productId}`,
+      order_id: "",
+      product_id: product.id,
+      product_name: product.name,
+      sku: product.sku,
+      quantity: item.quantity,
+      unit_price: product.wholesale_price,
+      total_price: lineTotal,
+      size: item.size ?? null,
+      color: item.color ?? null,
+    });
+  }
+
+  const supabase = await getSupabaseServer();
+  if (supabase) {
+    const orderNumber = `FBI-ORD-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+    const { data: order, error } = await supabase
+      .from("orders")
+      .insert({
+        order_number: orderNumber,
+        buyer_name: input.buyer_name,
+        buyer_company: input.buyer_company ?? null,
+        buyer_email: input.buyer_email,
+        buyer_country: input.buyer_country,
+        status: "pending",
+        total_amount: total,
+        currency: input.currency ?? "USD",
+        shipping_address: input.shipping_address ?? null,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    await supabase.from("order_items").insert(
+      lineItems.map((li) => ({ ...li, order_id: (order as Order).id }))
+    );
+    return order as Order;
+  }
+
+  const orderId = String(Date.now());
+  const orderNumber = `FBI-ORD-${new Date().getFullYear()}-${String(mockOrders.length + 1).padStart(3, "0")}`;
+  const order: Order = {
+    id: orderId,
+    order_number: orderNumber,
+    buyer_name: input.buyer_name,
+    buyer_company: input.buyer_company ?? null,
+    buyer_email: input.buyer_email,
+    buyer_country: input.buyer_country,
+    status: "pending",
+    total_amount: total,
+    currency: input.currency ?? "USD",
+    shipping_address: input.shipping_address ?? null,
+    tracking_number: null,
+    notes: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    items: lineItems.map((li) => ({ ...li, order_id: orderId })),
+  };
+  mockOrders.unshift(order);
+  mockOrderItems.unshift(...order.items!);
+  return order;
 }
 
 export async function getAllProducts(): Promise<Product[]> {

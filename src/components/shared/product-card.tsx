@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -21,6 +21,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, categoryName, className }: ProductCardProps) {
+  const router = useRouter();
   const { currency } = useApp();
   const { addItem } = useCart();
   const image = product.images[0] || IMAGES.placeholder;
@@ -28,7 +29,10 @@ export function ProductCard({ product, categoryName, className }: ProductCardPro
   const isLowStock =
     !isOutOfStock && product.stock_quantity <= product.low_stock_threshold;
 
-  const handleAddToCart = () => {
+  const goToProduct = () => router.push(`/products/${product.slug}`);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (isOutOfStock) {
       toast.error("This product is out of stock");
       return;
@@ -47,7 +51,18 @@ export function ProductCard({ product, categoryName, className }: ProductCardPro
 
   return (
     <ScaleOnHover>
-      <Card className={cn("group overflow-hidden border-border/50 transition-shadow hover:shadow-xl", className)}>
+      <Card
+        className={cn("group cursor-pointer overflow-hidden border-border/50 transition-shadow hover:shadow-xl", className)}
+        onClick={goToProduct}
+        role="link"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            goToProduct();
+          }
+        }}
+      >
         <div className="relative aspect-[3/4] overflow-hidden bg-muted">
           <SafeImage
             src={image}
@@ -80,9 +95,7 @@ export function ProductCard({ product, categoryName, className }: ProductCardPro
             <p className="text-xs font-medium uppercase tracking-wider text-gold">{categoryName}</p>
           )}
           <h3 className="mt-1 font-semibold leading-tight line-clamp-2 group-hover:text-gold transition-colors">
-            <Link href={`/products?search=${encodeURIComponent(product.name)}`}>
-              {product.name}
-            </Link>
+            {product.name}
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">SKU: {product.sku}</p>
           {product.colors?.length > 0 && (

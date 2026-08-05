@@ -31,6 +31,11 @@ export default function AdminProductsPage() {
       p.sku.toLowerCase().includes(search.toLowerCase())
   );
 
+  const categoryCounts = mockCategories.map((cat) => ({
+    ...cat,
+    count: (products || []).filter((p) => p.category_id === cat.id).length,
+  }));
+
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this product?")) return;
     try {
@@ -82,6 +87,16 @@ export default function AdminProductsPage() {
     <>
       <AdminHeader title="Product Management" />
       <div className="p-6 lg:p-8 space-y-6">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+          {categoryCounts.map((cat) => (
+            <div key={cat.id} className="rounded-lg border bg-muted/30 px-4 py-3">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{cat.name}</p>
+              <p className="mt-1 text-2xl font-bold text-gold">{cat.count}</p>
+              <p className="text-xs text-muted-foreground">designs in stock</p>
+            </div>
+          ))}
+        </div>
+
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative max-w-sm flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -128,6 +143,10 @@ export default function AdminProductsPage() {
             </Dialog>
           </div>
         </div>
+
+        <p className="text-sm text-muted-foreground">
+          Showing {filtered.length} of {(products || []).length} products — same inventory as the public website.
+        </p>
 
         <div className="overflow-x-auto rounded-xl border">
           <table className="w-full text-sm">

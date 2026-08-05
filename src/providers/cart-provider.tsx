@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import type { Product } from "@/types";
+import { getColorImage } from "@/lib/utils/product-images";
 
 export interface CartItem {
   productId: string;
@@ -83,7 +84,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             name: product.name,
             sku: product.sku,
             slug: product.slug,
-            image: product.images[0] || null,
+            image: opts?.color
+              ? getColorImage(product, opts.color)
+              : product.images[0] || null,
             wholesale_price: product.wholesale_price,
             moq: product.moq,
             quantity: qty,

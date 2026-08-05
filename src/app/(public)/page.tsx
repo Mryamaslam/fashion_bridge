@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   ArrowRight, Award, Globe, Factory, Package, Ship,
-  Shirt, Tag, Settings, Headphones, DollarSign, Clock,
+  Tag, Settings, Headphones, DollarSign, Clock,
 } from "lucide-react";
 import { HeroSlideshow } from "@/components/animations/hero-slideshow";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/animations/motion";
@@ -9,6 +9,7 @@ import { SectionHeader } from "@/components/shared/section-header";
 import { AnimatedCounter } from "@/components/shared/animated-counter";
 import { ProductCard } from "@/components/shared/product-card";
 import { CollectionCard } from "@/components/shared/collection-card";
+import { SafeImage } from "@/components/shared/safe-image";
 import { TestimonialCarousel } from "@/components/shared/testimonial-carousel";
 import { CTASection } from "@/components/shared/cta-section";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ import {
 import { IMAGES } from "@/lib/constants/images";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Award, Globe, Factory, Package, Ship, Shirt, Tag, Settings, Headphones, DollarSign, Clock,
+  Award, Globe, Factory, Package, Ship, Tag, Settings, Headphones, DollarSign, Clock,
 };
 
 const heroSlides = IMAGES.hero;
@@ -101,17 +102,28 @@ export default async function HomePage() {
           />
           <StaggerContainer className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
             {CATEGORIES.map((cat) => {
-              const Icon = iconMap[cat.icon] || Shirt;
+              const image =
+                IMAGES.categories[cat.slug as keyof typeof IMAGES.categories] ||
+                IMAGES.placeholder;
               return (
                 <StaggerItem key={cat.slug}>
                   <Link href={`/products?category=${cat.slug}`}>
-                    <Card className="group cursor-pointer border-border/50 transition-all hover:border-gold/50 hover:shadow-lg">
-                      <CardContent className="flex flex-col items-center p-6 text-center">
-                        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gold/10 text-gold transition-colors group-hover:bg-gold group-hover:text-black">
-                          <Icon className="h-6 w-6" />
+                    <Card className="group relative overflow-hidden border-border/50 transition-all hover:border-gold/50 hover:shadow-lg">
+                      <div className="relative aspect-square overflow-hidden bg-secondary/40">
+                        <SafeImage
+                          src={image}
+                          alt={cat.name}
+                          fill
+                          className="object-cover transition-transform duration-700 group-hover:scale-105"
+                          sizes="(max-width: 768px) 50vw, 25vw"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                        <div className="absolute inset-x-0 bottom-0 p-4">
+                          <h3 className="font-display text-lg font-semibold text-white transition-colors group-hover:text-gold md:text-xl">
+                            {cat.name}
+                          </h3>
                         </div>
-                        <h3 className="font-semibold group-hover:text-gold transition-colors">{cat.name}</h3>
-                      </CardContent>
+                      </div>
                     </Card>
                   </Link>
                 </StaggerItem>

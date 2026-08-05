@@ -105,7 +105,7 @@ export const EXPORT_SERVICES = [
 
 export const STATS = [
   { value: 80, suffix: "+", label: "Export Countries" },
-  { value: 500, suffix: "+", label: "Product SKUs" },
+  { value: 240, suffix: "+", label: "Product SKUs" },
   { value: 15, suffix: "+", label: "Years Experience" },
   { value: 10000, suffix: "+", label: "Monthly Units" },
 ] as const;

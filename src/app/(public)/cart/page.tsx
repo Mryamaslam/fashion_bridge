@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/providers/cart-provider";
 import { useApp } from "@/providers/app-provider";
 import { formatCurrency } from "@/lib/utils";
+import { CheckoutForm } from "@/components/forms/checkout-form";
 import { IMAGES } from "@/lib/constants/images";
 
 export default function CartPage() {
@@ -155,6 +156,7 @@ export default function CartPage() {
                 <Button asChild variant="outline" className="mt-3 w-full">
                   <Link href="/products">Continue shopping</Link>
                 </Button>
+                <CheckoutForm />
               </aside>
             </div>
           )}
