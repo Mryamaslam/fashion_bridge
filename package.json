@@ -10,7 +10,8 @@
     "deploy:netlify": "netlify deploy --build --prod",
     "deploy:netlify:preview": "netlify deploy --build",
     "deploy:vercel": "vercel --prod",
-    "build:github-pages": "node scripts/build-github-pages.mjs"
+    "build:github-pages": "node scripts/build-github-pages.mjs",
+    "seed:supabase": "npx tsx scripts/seed-supabase.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

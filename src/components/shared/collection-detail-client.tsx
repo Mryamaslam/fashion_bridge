@@ -12,6 +12,7 @@ import {
   getClientProductsByCollection,
   getClientCategoryName,
 } from "@/lib/services/client-data";
+import { getCollectionImage } from "@/lib/constants/images";
 import type { Collection, Product } from "@/types";
 
 export function CollectionDetailClient({ slug }: { slug: string }) {
@@ -56,12 +57,14 @@ export function CollectionDetailClient({ slug }: { slug: string }) {
 
   if (!collection) notFound();
 
+  const bannerImage = getCollectionImage(collection, "banner");
+
   return (
     <>
       <section className="relative h-[50vh] min-h-[400px]">
-        {collection.banner_url && (
+        {bannerImage && (
           <SafeImage
-            src={collection.banner_url}
+            src={bannerImage}
             alt={collection.name}
             fill
             className="object-cover"

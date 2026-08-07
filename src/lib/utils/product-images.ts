@@ -130,6 +130,25 @@ const FALLBACK_BY_COLOR: Record<string, string> = {
   Gold: P.teeRed,
 };
 
+export function getProductCardImage(product: Product): string {
+  const direct = product.images?.find(Boolean);
+  if (direct) return direct;
+
+  const categoryId = product.category_id || "";
+  const byCategory: Record<string, string> = {
+    "1": P.tshirt,
+    "2": P.polo,
+    "3": P.hoodie,
+    "4": P.shorts,
+    "5": P.jeans,
+    "6": P.bag,
+    "7": P.sneakers,
+    "8": P.accessories,
+  };
+
+  return byCategory[categoryId] || IMAGES.placeholder;
+}
+
 export function getColorImage(product: Product, color: string): string {
   const categoryId = product.category_id || "";
   const categoryMap = CATEGORY_COLOR_IMAGES[categoryId];

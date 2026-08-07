@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { SafeImage } from "@/components/shared/safe-image";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -55,12 +55,11 @@ export function HeroSlideshow({
           className="absolute inset-0"
           aria-hidden={i !== current}
         >
-          <Image
+          <SafeImage
             src={slide.image}
             alt={slide.title}
             fill
             priority
-            quality={85}
             className="object-cover"
             sizes="100vw"
           />

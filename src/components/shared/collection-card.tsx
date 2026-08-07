@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ScaleOnHover } from "@/components/animations/motion";
 import { SafeImage } from "@/components/shared/safe-image";
-import { IMAGES } from "@/lib/constants/images";
+import { getCollectionImage } from "@/lib/constants/images";
 import type { Collection } from "@/types";
 
 interface CollectionCardProps {
@@ -16,7 +16,7 @@ interface CollectionCardProps {
 }
 
 export function CollectionCard({ collection, className }: CollectionCardProps) {
-  const image = collection.thumbnail_url || collection.banner_url || IMAGES.placeholder;
+  const image = getCollectionImage(collection, "thumb");
 
   return (
     <ScaleOnHover>

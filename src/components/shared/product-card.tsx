@@ -12,7 +12,7 @@ import { SafeImage } from "@/components/shared/safe-image";
 import type { Product } from "@/types";
 import { useApp } from "@/providers/app-provider";
 import { useCart } from "@/providers/cart-provider";
-import { IMAGES } from "@/lib/constants/images";
+import { getProductCardImage } from "@/lib/utils/product-images";
 
 interface ProductCardProps {
   product: Product;
@@ -24,7 +24,7 @@ export function ProductCard({ product, categoryName, className }: ProductCardPro
   const router = useRouter();
   const { currency } = useApp();
   const { addItem } = useCart();
-  const image = product.images[0] || IMAGES.placeholder;
+  const image = getProductCardImage(product);
   const isOutOfStock = product.stock_quantity === 0;
   const isLowStock =
     !isOutOfStock && product.stock_quantity <= product.low_stock_threshold;

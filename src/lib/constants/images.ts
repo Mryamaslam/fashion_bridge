@@ -1,15 +1,12 @@
 /**
  * Product / collection image URLs.
  * ALL catalog product images are local files under /public/images/products.
- * Unsplash is used only for hero, about, and collection banners.
+ * Hero and collection banners use local assets (no external CDN).
  */
-
-export function unsplash(photoId: string, width: number, quality = 80) {
-  return `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=${width}&q=${quality}`;
-}
 
 const local = (file: string) => `/images/products/${file}`;
 const localCat = (file: string) => `/images/categories/${file}`;
+const localHero = (file: string) => `/images/products/${file}`;
 
 /** Local blank wholesale catalog images — product cards use these only */
 const L = {
@@ -52,38 +49,38 @@ const L = {
 } as const;
 
 const PHOTOS = {
-  heroFashion: "photo-1483985988353-763728e1935b",
-  heroWholesale: "photo-1567401893414-76b7b1e0a279",
-  heroManufacturing: "photo-1617127365659-c47fa864d8bc",
-  heroCatalog: "photo-1441984909226-793344a5a99a",
-  summerCollection: "photo-1445205170230-053b83016050",
-  winterCollection: "photo-1489987707025-afc232f7ea0f",
-  sportsCollection: "photo-1517836357463-d25dfeac3438",
-  streetwearCollection: "photo-1552374196-1ab2a1c593e8",
-  denimCollection: "photo-1542272604-787c3835535d",
-  footwearCollection: "photo-1549298916-b41d501d3772",
-  aboutManufacturing: "photo-1445205170230-053b83016050",
-  aboutFactory: "photo-1581091226825-a6a2a5aee158",
+  heroFashion: localHero("tee-stack-basics.png"),
+  heroWholesale: localHero("hoodie-grey-flat.png"),
+  heroManufacturing: localHero("jeans-blue-stack.png"),
+  heroCatalog: localHero("polo-navy-folded.png"),
+  summerCollection: localHero("tee-white-flat.png"),
+  winterCollection: localHero("hoodie-black-pullover.png"),
+  sportsCollection: localHero("shorts-black-mesh.png"),
+  streetwearCollection: localHero("tee-black-flat.png"),
+  denimCollection: localHero("jeans-dark-wash.png"),
+  footwearCollection: localHero("shoes-black-lifestyle.png"),
+  aboutManufacturing: localHero("tee-stack-basics.png"),
+  aboutFactory: localHero("hoodie-black-zip.png"),
 } as const;
 
 export const IMAGES = {
   hero: [
-    { image: unsplash(PHOTOS.heroFashion, 1920), title: "Premium Fashion Export" },
-    { image: unsplash(PHOTOS.heroWholesale, 1920), title: "Wholesale Apparel Worldwide" },
-    { image: unsplash(PHOTOS.heroManufacturing, 1920), title: "Quality Manufacturing" },
+    { image: PHOTOS.heroFashion, title: "Premium Fashion Export" },
+    { image: PHOTOS.heroWholesale, title: "Wholesale Apparel Worldwide" },
+    { image: PHOTOS.heroManufacturing, title: "Quality Manufacturing" },
   ],
-  heroCatalog: unsplash(PHOTOS.heroCatalog, 1920),
+  heroCatalog: PHOTOS.heroCatalog,
   about: {
-    manufacturing: unsplash(PHOTOS.aboutManufacturing, 800),
-    factory: unsplash(PHOTOS.aboutFactory, 800),
+    manufacturing: PHOTOS.aboutManufacturing,
+    factory: PHOTOS.aboutFactory,
   },
   collections: {
-    summer: { banner: unsplash(PHOTOS.summerCollection, 1200), thumb: unsplash(PHOTOS.summerCollection, 400) },
-    winter: { banner: unsplash(PHOTOS.winterCollection, 1200), thumb: unsplash(PHOTOS.winterCollection, 400) },
-    sports: { banner: unsplash(PHOTOS.sportsCollection, 1200), thumb: unsplash(PHOTOS.sportsCollection, 400) },
-    streetwear: { banner: unsplash(PHOTOS.streetwearCollection, 1200), thumb: unsplash(PHOTOS.streetwearCollection, 400) },
-    denim: { banner: unsplash(PHOTOS.denimCollection, 1200), thumb: unsplash(PHOTOS.denimCollection, 400) },
-    footwear: { banner: unsplash(PHOTOS.footwearCollection, 1200), thumb: unsplash(PHOTOS.footwearCollection, 400) },
+    summer: { banner: PHOTOS.summerCollection, thumb: PHOTOS.summerCollection },
+    winter: { banner: PHOTOS.winterCollection, thumb: PHOTOS.winterCollection },
+    sports: { banner: PHOTOS.sportsCollection, thumb: PHOTOS.sportsCollection },
+    streetwear: { banner: PHOTOS.streetwearCollection, thumb: PHOTOS.streetwearCollection },
+    denim: { banner: PHOTOS.denimCollection, thumb: PHOTOS.denimCollection },
+    footwear: { banner: PHOTOS.footwearCollection, thumb: PHOTOS.footwearCollection },
   },
   /** Category tile images — local /images/categories/*.png */
   categories: {
@@ -147,3 +144,27 @@ export const IMAGES = {
   },
   placeholder: "/images/placeholder.svg",
 } as const;
+
+const COLLECTION_BY_SLUG: Record<string, string> = {
+  "summer-collection": IMAGES.collections.summer.thumb,
+  "winter-collection": IMAGES.collections.winter.thumb,
+  "sports-collection": IMAGES.collections.sports.thumb,
+  "streetwear-collection": IMAGES.collections.streetwear.thumb,
+  "premium-denim-collection": IMAGES.collections.denim.thumb,
+  "footwear-collection": IMAGES.collections.footwear.thumb,
+};
+
+/** Prefer local assets; ignore broken legacy Unsplash URLs in DB */
+export function getCollectionImage(
+  collection: { slug: string; thumbnail_url?: string | null; banner_url?: string | null },
+  variant: "thumb" | "banner" = "thumb"
+): string {
+  const local = COLLECTION_BY_SLUG[collection.slug];
+  const remote = variant === "banner" ? collection.banner_url : collection.thumbnail_url;
+  const fallbackRemote = collection.banner_url || collection.thumbnail_url;
+
+  if (local) return local;
+  if (remote && !remote.includes("unsplash.com")) return remote;
+  if (fallbackRemote && !fallbackRemote.includes("unsplash.com")) return fallbackRemote;
+  return IMAGES.placeholder;
+}
