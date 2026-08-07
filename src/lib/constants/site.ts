@@ -132,7 +132,6 @@ export const COLORS = [
   "White",
   "Navy",
   "Grey",
-  "Red",
   "Blue",
   "Green",
   "Beige",

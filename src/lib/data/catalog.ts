@@ -17,12 +17,12 @@ const SOCK_SIZES = ["S/M", "L/XL"] as string[];
 
 const COLOR_SETS = [
   ["Black", "White", "Navy", "Grey"],
-  ["Black", "White", "Navy", "Red"],
+  ["Black", "White", "Navy", "Blue"],
   ["Black", "Grey", "Navy", "Blue"],
   ["Black", "White", "Beige", "Brown"],
   ["Navy", "White", "Blue", "Green"],
-  ["Black", "Red", "Grey", "Gold"],
-  ["White", "Black", "Navy", "Grey", "Red"],
+  ["Black", "Grey", "Gold", "Brown"],
+  ["White", "Black", "Navy", "Grey"],
   ["Black", "Navy", "Green", "Brown"],
   ["Beige", "Brown", "Navy", "Gold"],
   ["Black", "White", "Gold"],
@@ -55,7 +55,7 @@ const CATALOG: CatalogCategory[] = [
     wholesaleRange: [6.8, 12.0],
     stockRange: [1500, 6200],
     lowStockRange: [150, 500],
-    imagePool: [prod.tshirt, prod.teeStack, prod.streetwearTee, prod.performanceTee, prod.teeRed],
+    imagePool: [prod.tshirt, prod.teeStack, prod.streetwearTee, prod.teeRed],
     materials: [
       "100% Combed Cotton · 180gsm",
       "100% Cotton · 220gsm",
@@ -120,7 +120,7 @@ const CATALOG: CatalogCategory[] = [
     wholesaleRange: [11.0, 14.5],
     stockRange: [1600, 3200],
     lowStockRange: [150, 300],
-    imagePool: [prod.polo, prod.poloWhite, prod.poloLongSleeve, prod.poloPerformance],
+    imagePool: [prod.polo, prod.poloWhite, prod.poloLongSleeve],
     materials: [
       "100% Cotton Pique · 220gsm",
       "100% Polyester Pique · 160gsm",
@@ -250,7 +250,7 @@ const CATALOG: CatalogCategory[] = [
     wholesaleRange: [8.5, 13.0],
     stockRange: [1900, 4500],
     lowStockRange: [180, 400],
-    imagePool: [prod.shorts, prod.shortsCargo, prod.shortsChino, prod.shortsBasketball, prod.sportsGym],
+    imagePool: [prod.shorts, prod.shortsCargo, prod.shortsChino, prod.sportsGym],
     materials: [
       "100% Polyester Mesh · 120gsm",
       "100% Cotton Twill · 240gsm",
@@ -315,7 +315,7 @@ const CATALOG: CatalogCategory[] = [
     wholesaleRange: [18.0, 25.0],
     stockRange: [650, 2400],
     lowStockRange: [60, 250],
-    imagePool: [prod.jeans, prod.jeansStraight, prod.jeansRelaxed, prod.jeansWomen],
+    imagePool: [prod.jeans, prod.jeansStraight],
     materials: [
       "98% Cotton, 2% Elastane · 12oz",
       "100% Cotton Denim · 14oz",
@@ -445,7 +445,7 @@ const CATALOG: CatalogCategory[] = [
     wholesaleRange: [17.0, 36.0],
     stockRange: [640, 2500],
     lowStockRange: [60, 250],
-    imagePool: [prod.sneakers, prod.sneakersWhite, prod.sneakersRun, prod.sneakersHighTop, prod.sneakersCanvas, prod.sneakersTrail, prod.sneakersLifestyle],
+    imagePool: [prod.sneakers, prod.sneakersWhite, prod.sneakersRun, prod.sneakersHighTop, prod.sneakersCanvas, prod.sneakersTrail],
     materials: [
       "Synthetic Upper, Rubber Outsole",
       "Mesh Upper, EVA Midsole, Rubber Outsole",
@@ -596,11 +596,8 @@ export function generateCatalogProducts(): Product[] {
       const name = cat.names[i];
       const slug = slugify(name);
       const colors = [...pick(COLOR_SETS, i)];
-      const images = [
-        pick(cat.imagePool, i),
-        pick(cat.imagePool, i + 1),
-        pick(cat.imagePool, i + 2),
-      ].filter((img, idx, arr) => arr.indexOf(img) === idx);
+      const uniquePool = [...new Set(cat.imagePool)];
+      const images = [uniquePool[i % uniquePool.length]];
 
       products.push({
         id: `${cat.id}-${num}`,

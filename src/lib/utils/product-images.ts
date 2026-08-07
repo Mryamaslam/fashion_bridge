@@ -9,7 +9,6 @@ export const COLOR_SWATCHES: Record<string, string> = {
   White: "#f5f5f5",
   Navy: "#1e3a5f",
   Grey: "#737373",
-  Red: "#dc2626",
   Blue: "#2563eb",
   Green: "#16a34a",
   Beige: "#d4c4a8",
@@ -17,149 +16,81 @@ export const COLOR_SWATCHES: Record<string, string> = {
   Gold: "#c9a227",
 };
 
-/** Category-aware color → presentation image map */
-const CATEGORY_COLOR_IMAGES: Record<string, Record<string, string>> = {
-  "1": {
-    Black: P.streetwearTee,
-    White: P.tshirt,
-    Navy: P.polo,
-    Grey: P.teeStack,
-    Red: P.teeRed,
-    Blue: P.performanceTee,
-    Beige: P.teeStack,
-    Brown: P.streetwearTee,
-    Green: P.performanceTee,
-    Gold: P.teeRed,
-  },
-  "2": {
-    Navy: P.polo,
-    White: P.poloWhite,
-    Black: P.poloLongSleeve,
-    Red: P.polo,
-    Blue: P.poloWhite,
-    Green: P.poloWhite,
-    Grey: P.poloLongSleeve,
-    Beige: P.poloWhite,
-    Brown: P.poloLongSleeve,
-    Gold: P.polo,
-  },
-  "3": {
-    Black: P.hoodieBlack,
-    Grey: P.hoodie,
-    Navy: P.hoodieZip,
-    Green: P.hoodieZip,
-    White: P.hoodieFrenchTerry,
-    Beige: P.hoodieOversized,
-    Brown: P.hoodieOversized,
-    Red: P.hoodieBlack,
-    Blue: P.hoodieZip,
-    Gold: P.hoodie,
-  },
-  "4": {
-    Black: P.shorts,
-    Grey: P.sportsGym,
-    Navy: P.shorts,
-    Beige: P.shortsChino,
-    Brown: P.shortsChino,
-    Green: P.shortsCargo,
-    Blue: P.shorts,
-    Red: P.shorts,
-    White: P.shortsChino,
-    Gold: P.shortsChino,
-  },
-  "5": {
-    Black: P.jeansStraight,
-    Blue: P.jeans,
-    Grey: P.jeansStraight,
-    Navy: P.jeansStraight,
-    Beige: P.jeans,
-    Brown: P.jeansStraight,
-    White: P.jeans,
-    Red: P.jeansStraight,
-    Green: P.jeansStraight,
-    Gold: P.jeans,
-  },
-  "6": {
-    Black: P.backpack,
-    Navy: P.bagNavy,
-    Beige: P.bag,
-    Brown: P.duffel,
-    Grey: P.crossbody,
-    White: P.bag,
-    Red: P.duffel,
-    Blue: P.bagNavy,
-    Green: P.backpack,
-    Gold: P.bag,
-  },
-  "7": {
-    Black: P.sneakers,
-    White: P.sneakersWhite,
-    Navy: P.sneakers,
-    Grey: P.sneakersTrail,
-    Red: P.sneakersRun,
-    Blue: P.sneakersCanvas,
-    Beige: P.sneakersCanvas,
-    Brown: P.sneakers,
-    Green: P.sneakersTrail,
-    Gold: P.sneakersRun,
-  },
-  "8": {
-    Black: P.cap,
-    White: P.socks,
-    Navy: P.beanie,
-    Grey: P.cap,
-    Red: P.cap,
-    Blue: P.beanie,
-    Beige: P.scarf,
-    Brown: P.accessories,
-    Green: P.beanie,
-    Gold: P.accessories,
-  },
+/** Offsets image selection so adjacent SKUs with different colors show different photos */
+const COLOR_ORDER: Record<string, number> = {
+  Black: 0,
+  White: 1,
+  Navy: 2,
+  Grey: 3,
+  Blue: 4,
+  Green: 5,
+  Beige: 6,
+  Brown: 7,
+  Gold: 8,
 };
 
-const FALLBACK_BY_COLOR: Record<string, string> = {
-  Black: P.streetwearTee,
-  White: P.tshirt,
-  Navy: P.polo,
-  Grey: P.hoodie,
-  Red: P.teeRed,
-  Blue: P.performanceTee,
-  Green: P.shortsCargo,
-  Beige: P.bag,
-  Brown: P.accessories,
-  Gold: P.teeRed,
+/** Unique local images per category — no duplicate paths */
+const CATEGORY_UNIQUE_POOLS: Record<string, string[]> = {
+  "1": [P.tshirt, P.teeStack, P.streetwearTee, P.teeRed],
+  "2": [P.polo, P.poloWhite, P.poloLongSleeve],
+  "3": [
+    P.hoodie,
+    P.hoodieZip,
+    P.hoodieBlack,
+    P.hoodieFrenchTerry,
+    P.hoodieOversized,
+    P.hoodieCropped,
+    P.windbreaker,
+  ],
+  "4": [P.shorts, P.shortsCargo, P.shortsChino, P.sportsGym],
+  "5": [P.jeans, P.jeansStraight],
+  "6": [P.bag, P.bagNavy, P.backpack, P.crossbody, P.duffel],
+  "7": [
+    P.sneakers,
+    P.sneakersWhite,
+    P.sneakersRun,
+    P.sneakersHighTop,
+    P.sneakersCanvas,
+    P.sneakersTrail,
+  ],
+  "8": [P.accessories, P.cap, P.beanie, P.socks, P.scarf],
 };
+
+function productSkuIndex(product: Product): number {
+  const match = product.sku?.match(/-(\d+)$/);
+  return match ? parseInt(match[1], 10) - 1 : 0;
+}
+
+/** Strip legacy Red from catalog / Supabase rows */
+export function getDisplayColors(colors: string[] | undefined): string[] {
+  return (colors ?? []).filter((color) => color !== "Red");
+}
+
+function pickCategoryImage(product: Product, color?: string): string {
+  const categoryId = product.category_id || "";
+  const pool = CATEGORY_UNIQUE_POOLS[categoryId];
+  if (!pool?.length) return IMAGES.placeholder;
+
+  const colorKey = color ?? product.colors?.[0] ?? "";
+  const colorOffset = COLOR_ORDER[colorKey] ?? 0;
+  const idx = productSkuIndex(product);
+  return pool[(idx + colorOffset) % pool.length];
+}
 
 export function getProductCardImage(product: Product): string {
-  const direct = product.images?.find(Boolean);
-  if (direct) return direct;
-
-  const categoryId = product.category_id || "";
-  const byCategory: Record<string, string> = {
-    "1": P.tshirt,
-    "2": P.polo,
-    "3": P.hoodie,
-    "4": P.shorts,
-    "5": P.jeans,
-    "6": P.bag,
-    "7": P.sneakers,
-    "8": P.accessories,
-  };
-
-  return byCategory[categoryId] || IMAGES.placeholder;
+  return pickCategoryImage(product);
 }
 
 export function getColorImage(product: Product, color: string): string {
-  const categoryId = product.category_id || "";
-  const categoryMap = CATEGORY_COLOR_IMAGES[categoryId];
-  if (categoryMap?.[color]) return categoryMap[color];
+  const fromPool = pickCategoryImage(product, color);
+  if (fromPool !== IMAGES.placeholder) return fromPool;
 
   const productImage = product.images.find((img) =>
     img.toLowerCase().includes(color.toLowerCase())
   );
   if (productImage) return productImage;
 
-  return FALLBACK_BY_COLOR[color] || product.images[0] || IMAGES.placeholder;
+  return product.images[0] || IMAGES.placeholder;
 }
 
 export interface ColorPresentation {
@@ -170,7 +101,7 @@ export interface ColorPresentation {
 
 /** All available colors with their presentation images for the product detail page */
 export function getProductColorPresentations(product: Product): ColorPresentation[] {
-  return product.colors.map((color) => ({
+  return getDisplayColors(product.colors).map((color) => ({
     color,
     image: getColorImage(product, color),
     swatch: COLOR_SWATCHES[color] || "#737373",

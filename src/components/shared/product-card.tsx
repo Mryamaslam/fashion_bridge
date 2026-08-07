@@ -12,7 +12,7 @@ import { SafeImage } from "@/components/shared/safe-image";
 import type { Product } from "@/types";
 import { useApp } from "@/providers/app-provider";
 import { useCart } from "@/providers/cart-provider";
-import { getProductCardImage } from "@/lib/utils/product-images";
+import { getProductCardImage, getDisplayColors } from "@/lib/utils/product-images";
 
 interface ProductCardProps {
   product: Product;
@@ -25,6 +25,7 @@ export function ProductCard({ product, categoryName, className }: ProductCardPro
   const { currency } = useApp();
   const { addItem } = useCart();
   const image = getProductCardImage(product);
+  const displayColors = getDisplayColors(product.colors);
   const isOutOfStock = product.stock_quantity === 0;
   const isLowStock =
     !isOutOfStock && product.stock_quantity <= product.low_stock_threshold;
@@ -98,9 +99,9 @@ export function ProductCard({ product, categoryName, className }: ProductCardPro
             {product.name}
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">SKU: {product.sku}</p>
-          {product.colors?.length > 0 && (
+          {displayColors.length > 0 && (
             <p className="mt-2 text-xs text-muted-foreground line-clamp-1">
-              Colors: {product.colors.join(", ")}
+              Colors: {displayColors.join(", ")}
             </p>
           )}
           {product.sizes?.length > 0 && (
