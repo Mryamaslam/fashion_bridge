@@ -3,39 +3,70 @@ import { slugify } from "@/lib/utils";
 
 const P = IMAGES.products;
 
+/** One unique photo per polo SKU — file name matches product slug */
+const poloPath = (slug: string) => `/images/products/polos/${slug}.png`;
+
+const POLO_PRODUCT_SLUGS = [
+  "classic-pique-polo-shirt",
+  "performance-dry-fit-polo",
+  "long-sleeve-pique-polo",
+  "striped-summer-polo",
+  "executive-solid-polo",
+  "burgundy-club-polo",
+  "sand-beige-resort-polo",
+  "contrast-collar-polo",
+  "tipped-cuff-fashion-polo",
+  "mesh-panel-sports-polo",
+  "rugby-stripe-polo",
+  "pocket-detail-polo",
+  "mercerized-cotton-polo",
+  "eco-recycled-polo",
+  "zip-neck-polo",
+  "henley-collar-polo",
+  "slim-fit-corporate-polo",
+  "relaxed-resort-polo",
+  "golf-tour-performance-polo",
+  "tennis-club-polo",
+  "hospitality-uniform-polo",
+  "school-team-polo",
+  "fashion-colorblock-polo",
+  "premium-pearl-button-polo",
+  "lightweight-travel-polo",
+  "winter-thermal-polo",
+  "womens-fit-polo",
+  "big-tall-polo",
+  "youth-team-polo",
+  "custom-embroidery-polo",
+] as const;
+
+const POLO_SLUG_IMAGES = Object.fromEntries(
+  POLO_PRODUCT_SLUGS.map((slug) => [slug, poloPath(slug)])
+) as Record<string, string>;
+
+/** Map mock id or SKU prefix → catalog category key */
+export function categoryKeyFromProduct(
+  categoryId: string | null | undefined,
+  sku?: string | null
+): string {
+  if (categoryId && /^[1-8]$/.test(categoryId)) return categoryId;
+  const prefix = sku?.match(/^(FBI-[A-Z]{2})/)?.[1];
+  const bySku: Record<string, string> = {
+    "FBI-TS": "1",
+    "FBI-PL": "2",
+    "FBI-HD": "3",
+    "FBI-SR": "4",
+    "FBI-JN": "5",
+    "FBI-BG": "6",
+    "FBI-FT": "7",
+  };
+  if (prefix && bySku[prefix]) return bySku[prefix];
+  if (sku?.startsWith("FBI-")) return "8";
+  return categoryId ?? "";
+}
+
 /** Exact product slug → catalog image (name-accurate) */
 const SLUG_IMAGE_MAP: Record<string, string> = {
-  // Polo shirts — each design gets a distinct, name-matching photo
-  "classic-pique-polo-shirt": P.polo,
-  "performance-dry-fit-polo": P.poloMesh,
-  "long-sleeve-pique-polo": P.poloLongSleeve,
-  "striped-summer-polo": P.poloStriped,
-  "executive-solid-polo": P.polo,
-  "burgundy-club-polo": P.poloBurgundy,
-  "sand-beige-resort-polo": P.poloBeige,
-  "contrast-collar-polo": P.poloContrast,
-  "tipped-cuff-fashion-polo": P.poloTipped,
-  "mesh-panel-sports-polo": P.poloMesh,
-  "rugby-stripe-polo": P.poloRugby,
-  "pocket-detail-polo": P.poloPocket,
-  "mercerized-cotton-polo": P.poloWhite,
-  "eco-recycled-polo": P.poloOlive,
-  "zip-neck-polo": P.poloZip,
-  "henley-collar-polo": P.poloGrey,
-  "slim-fit-corporate-polo": P.poloGrey,
-  "relaxed-resort-polo": P.poloBeige,
-  "golf-tour-performance-polo": P.poloOlive,
-  "tennis-club-polo": P.poloWhite,
-  "hospitality-uniform-polo": P.polo,
-  "school-team-polo": P.poloColorblock,
-  "fashion-colorblock-polo": P.poloColorblock,
-  "premium-pearl-button-polo": P.poloWhite,
-  "lightweight-travel-polo": P.poloBeige,
-  "winter-thermal-polo": P.poloLongSleeve,
-  "womens-fit-polo": P.poloWhite,
-  "big-tall-polo": P.polo,
-  "youth-team-polo": P.poloColorblock,
-  "custom-embroidery-polo": P.poloGrey,
+  ...POLO_SLUG_IMAGES,
 
   // T-shirts
   "premium-cotton-crew-neck-tee": P.tshirt,
@@ -248,16 +279,18 @@ const CATEGORY_DEFAULT: Record<string, string> = {
 export function resolveProductImage(
   name: string,
   categoryId: string,
-  slug?: string
+  slug?: string,
+  sku?: string | null
 ): string {
   const key = slug ?? slugify(name);
   const exact = SLUG_IMAGE_MAP[key];
   if (exact) return exact;
 
-  const rules = NAME_RULES[categoryId] ?? [];
+  const catKey = categoryKeyFromProduct(categoryId, sku);
+  const rules = NAME_RULES[catKey] ?? [];
   for (const rule of rules) {
     if (rule.pattern.test(name)) return rule.image;
   }
 
-  return CATEGORY_DEFAULT[categoryId] ?? IMAGES.placeholder;
+  return CATEGORY_DEFAULT[catKey] ?? IMAGES.placeholder;
 }

@@ -1,8 +1,9 @@
 import { IMAGES } from "@/lib/constants/images";
-import { resolveProductImage } from "@/lib/utils/product-image-map";
+import {
+  categoryKeyFromProduct,
+  resolveProductImage,
+} from "@/lib/utils/product-image-map";
 import type { Product } from "@/types";
-
-const { products: P } = IMAGES;
 
 /** Hex swatches for color picker UI */
 export const COLOR_SWATCHES: Record<string, string> = {
@@ -23,23 +24,21 @@ export function getDisplayColors(colors: string[] | undefined): string[] {
 }
 
 export function getProductCardImage(product: Product): string {
+  const stored = product.images?.find(
+    (url) => url && /^https?:\/\//i.test(url)
+  );
+  if (stored) return stored;
+
   return resolveProductImage(
     product.name,
-    product.category_id ?? "",
-    product.slug
+    categoryKeyFromProduct(product.category_id, product.sku),
+    product.slug,
+    product.sku
   );
 }
 
 export function getColorImage(product: Product, color: string): string {
-  const base = getProductCardImage(product);
-  if (base !== IMAGES.placeholder) return base;
-
-  const productImage = product.images.find((img) =>
-    img.toLowerCase().includes(color.toLowerCase())
-  );
-  if (productImage) return productImage;
-
-  return product.images[0] || IMAGES.placeholder;
+  return getProductCardImage(product);
 }
 
 export interface ColorPresentation {

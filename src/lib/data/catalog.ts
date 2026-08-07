@@ -597,7 +597,9 @@ export function generateCatalogProducts(): Product[] {
       const name = cat.names[i];
       const slug = slugify(name);
       const colors = [...pick(COLOR_SETS, i)];
-      const images = [resolveProductImage(name, cat.id, slug)];
+      const images = [
+        resolveProductImage(name, cat.id, slug, `${cat.skuPrefix}-${num}`),
+      ];
 
       products.push({
         id: `${cat.id}-${num}`,

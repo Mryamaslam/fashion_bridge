@@ -14,6 +14,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { mockCategories, mockCollections, mockProducts } from "../src/lib/data/mock";
+import { resolveProductImage } from "../src/lib/utils/product-image-map";
+import { getDisplayColors } from "../src/lib/utils/product-images";
 
 const ROOT = process.cwd();
 const IMAGES_DIR = path.join(ROOT, "public", "images");
@@ -204,11 +206,13 @@ async function main() {
       wholesale_price: p.wholesale_price,
       moq: p.moq,
       sizes: p.sizes,
-      colors: p.colors,
+      colors: getDisplayColors(p.colors),
       material: p.material,
       stock_quantity: p.stock_quantity,
       low_stock_threshold: p.low_stock_threshold,
-      images: mapUrls(urlMap, p.images),
+      images: mapUrls(urlMap, [
+        resolveProductImage(p.name, p.category_id ?? "", p.slug, p.sku),
+      ]),
       status: p.status,
       is_featured: p.is_featured,
     };
