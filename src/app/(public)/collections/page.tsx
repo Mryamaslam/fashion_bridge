@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
-import { getCollections } from "@/lib/services/data";
 import { FadeIn } from "@/components/animations/motion";
+import { CTASection } from "@/components/shared/cta-section";
+import { CollectionsPageContent } from "@/components/shared/collections-page-content";
+import { SITE } from "@/lib/constants/site";
+import { IS_STATIC_EXPORT } from "@/lib/constants/static-export";
+import { getCollections } from "@/lib/services/data";
 import { SectionHeader } from "@/components/shared/section-header";
 import { CollectionCard } from "@/components/shared/collection-card";
-import { CTASection } from "@/components/shared/cta-section";
-import { SITE } from "@/lib/constants/site";
 
 export const metadata: Metadata = {
   title: "Collections",
@@ -12,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CollectionsPage() {
-  const collections = await getCollections();
+  const collections = IS_STATIC_EXPORT ? [] : await getCollections();
 
   return (
     <>
@@ -27,20 +29,24 @@ export default async function CollectionsPage() {
         </div>
       </section>
 
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <SectionHeader
-            label="Curated"
-            title="Our Collections"
-            description="From summer essentials to premium denim — explore our themed product collections."
-          />
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {collections.map((collection) => (
-              <CollectionCard key={collection.id} collection={collection} />
-            ))}
+      {IS_STATIC_EXPORT ? (
+        <CollectionsPageContent />
+      ) : (
+        <section className="py-16 md:py-24">
+          <div className="container mx-auto px-4">
+            <SectionHeader
+              label="Curated"
+              title="Our Collections"
+              description="From summer essentials to premium denim — explore our themed product collections."
+            />
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {collections.map((collection) => (
+                <CollectionCard key={collection.id} collection={collection} />
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <CTASection
         title="Need a Custom Collection?"

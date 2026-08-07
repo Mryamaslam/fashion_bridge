@@ -81,10 +81,55 @@ src/
 
 See `.env.example` for all required variables.
 
-## Deploy to Vercel (recommended — connected to GitHub)
+## Deploy to GitHub Pages (live preview)
 
-Live repo: [github.com/Mryamaslam/fashion_bridge](https://github.com/Mryamaslam/fashion_bridge)  
-GitHub preview URL (`.io`): **https://mryamaslam.github.io/fashion_bridge**
+Live URL: **https://mryamaslam.github.io/fashion_bridge**
+
+Every push to `master` runs `.github/workflows/github-pages.yml` and publishes the site. With Supabase secrets configured (below), the live site uses your **real database** — not mock data.
+
+### Connect Supabase to GitHub Pages
+
+1. GitHub repo → **Settings** → **Secrets and variables** → **Actions**
+2. Add these **Repository secrets**:
+
+| Secret | Value |
+|--------|-------|
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://kiwutmrfmjotazmmjhky.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | your `sb_publishable_...` key |
+
+3. Supabase Dashboard → **Authentication** → **URL Configuration**:
+   - **Site URL:** `https://mryamaslam.github.io/fashion_bridge`
+   - **Redirect URLs:** `https://mryamaslam.github.io/fashion_bridge/**`
+
+4. Push to `master` — Actions rebuilds with live Supabase data.
+
+Without secrets, the site falls back to demo mock data.
+
+### One-time GitHub setup
+
+1. Repo → **Settings** → **Pages**
+2. **Build and deployment** → Source: **GitHub Actions**
+3. Push to `master` (or run the workflow manually from **Actions**)
+
+Set repo homepage (**Settings** → **General** → **Website**) to:
+
+```
+https://mryamaslam.github.io/fashion_bridge
+```
+
+### Local GitHub Pages build
+
+```bash
+npm run build:github-pages
+```
+
+Output is in the `out/` folder. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in your shell before building for live data.
+
+---
+
+## Deploy to Vercel (optional — full SSR + API)
+
+Live repo: [github.com/Mryamaslam/fashion_bridge](https://github.com/Mryamaslam/fashion_bridge)
 
 ### Auto-deploy from GitHub
 
@@ -95,7 +140,7 @@ GitHub preview URL (`.io`): **https://mryamaslam.github.io/fashion_bridge**
 
 | Variable | Value |
 |----------|-------|
-| `NEXT_PUBLIC_SITE_URL` | `https://mryamaslam.github.io/fashion_bridge` |
+| `NEXT_PUBLIC_SITE_URL` | `https://mryamaslam.github.io/fashion_bridge` (GitHub Pages) or your Vercel URL |
 
 5. Every push to `master` triggers a new production deploy.
 

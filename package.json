@@ -9,7 +9,8 @@
     "lint": "eslint",
     "deploy:netlify": "netlify deploy --build --prod",
     "deploy:netlify:preview": "netlify deploy --build",
-    "deploy:vercel": "vercel --prod"
+    "deploy:vercel": "vercel --prod",
+    "build:github-pages": "node scripts/build-github-pages.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

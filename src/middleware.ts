@@ -1,12 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 export async function middleware(request: NextRequest) {
-  const isSupabaseConfigured =
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    !process.env.NEXT_PUBLIC_SUPABASE_URL.includes("your_supabase");
 
-  if (isSupabaseConfigured) {
+  if (isSupabaseConfigured()) {
     return await updateSession(request);
   }
 

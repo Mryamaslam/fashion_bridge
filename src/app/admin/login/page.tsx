@@ -11,6 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FadeIn } from "@/components/animations/motion";
+import {
+  IS_STATIC_EXPORT,
+  DEMO_ADMIN_EMAIL,
+  DEMO_ADMIN_PASSWORD,
+  setDemoAdminAuth,
+} from "@/lib/constants/static-export";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { createClient } from "@/lib/supabase/client";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -25,6 +33,28 @@ export default function AdminLoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
+      if (IS_STATIC_EXPORT && isSupabaseConfigured()) {
+        const supabase = createClient();
+        const { error } = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
+        if (error) throw error;
+        toast.success("Welcome back!");
+        router.push("/admin");
+        router.refresh();
+        return;
+      }
+
+      if (IS_STATIC_EXPORT) {
+        if (data.email === DEMO_ADMIN_EMAIL && data.password === DEMO_ADMIN_PASSWORD) {
+          setDemoAdminAuth(true);
+          toast.success("Welcome back!");
+          router.push("/admin");
+          return;
+        }
+        throw new Error("Invalid credentials");
+      }
       const res = await fetch("/api/admin/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -71,7 +101,9 @@ export default function AdminLoginPage() {
                 )}
               </Button>
               <p className="text-center text-xs text-muted-foreground">
-                Demo: admin@fashionbridge.com / admin123
+                {IS_STATIC_EXPORT && isSupabaseConfigured()
+                  ? "Sign in with your Supabase admin account"
+                  : "Demo: admin@fashionbridge.com / admin123"}
               </p>
             </form>
           </CardContent>

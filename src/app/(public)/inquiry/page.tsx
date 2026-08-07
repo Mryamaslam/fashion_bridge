@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { FadeIn } from "@/components/animations/motion";
-import { InquiryForm } from "@/components/forms/inquiry-form";
-import { Card, CardContent } from "@/components/ui/card";
+import { InquiryFormSection } from "@/components/forms/inquiry-form-section";
 import { SITE } from "@/lib/constants/site";
 
 export const metadata: Metadata = {
@@ -10,36 +9,7 @@ export const metadata: Metadata = {
   description: `Submit a wholesale buyer inquiry to ${SITE.name} for pricing, samples, and export quotes.`,
 };
 
-interface Props {
-  searchParams: Promise<{ product?: string; country?: string; quantity?: string }>;
-}
-
-async function InquiryContent({
-  product,
-  country,
-  quantity,
-}: {
-  product?: string;
-  country?: string;
-  quantity?: string;
-}) {
-  const qty = quantity ? Number(quantity) : undefined;
-  return (
-    <Card className="border-gold/20">
-      <CardContent className="p-8">
-        <InquiryForm
-          defaultProduct={product}
-          defaultCountry={country}
-          defaultQuantity={qty && !Number.isNaN(qty) ? qty : undefined}
-        />
-      </CardContent>
-    </Card>
-  );
-}
-
-export default async function InquiryPage({ searchParams }: Props) {
-  const { product, country, quantity } = await searchParams;
-
+export default function InquiryPage() {
   return (
     <>
       <section className="bg-primary pt-28 pb-16">
@@ -56,7 +26,7 @@ export default async function InquiryPage({ searchParams }: Props) {
       <section className="py-16">
         <div className="container mx-auto max-w-3xl px-4">
           <Suspense fallback={<div className="py-20 text-center">Loading form...</div>}>
-            <InquiryContent product={product} country={country} quantity={quantity} />
+            <InquiryFormSection />
           </Suspense>
         </div>
       </section>

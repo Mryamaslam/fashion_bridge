@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { DEFAULT_MAPS_EMBED } from "@/lib/utils/settings-storage";
+import { IS_STATIC_EXPORT } from "@/lib/constants/static-export";
+import { submitClientContact } from "@/lib/services/client-data";
 
 export default function ContactPage() {
   const {
@@ -28,6 +30,12 @@ export default function ContactPage() {
 
   const onSubmit = async (data: ContactFormData) => {
     try {
+      if (IS_STATIC_EXPORT) {
+        await submitClientContact(data);
+        toast.success("Message sent! (Demo preview — we'll respond within 24 hours.)");
+        reset();
+        return;
+      }
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

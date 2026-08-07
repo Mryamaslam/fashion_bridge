@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCart } from "@/providers/cart-provider";
 import { EXPORT_COUNTRIES } from "@/lib/constants/site";
+import { IS_STATIC_EXPORT } from "@/lib/constants/static-export";
+import { submitClientOrder } from "@/lib/services/client-data";
 
 export function CheckoutForm() {
   const router = useRouter();
@@ -30,6 +32,22 @@ export function CheckoutForm() {
     }
     setLoading(true);
     try {
+      if (IS_STATIC_EXPORT) {
+        const data = await submitClientOrder(
+          items.map((i) => ({
+            productId: i.productId,
+            quantity: i.quantity,
+            color: i.color,
+            size: i.size,
+          }))
+        );
+        clearCart();
+        toast.success("Order placed successfully", {
+          description: `Order ${data.order_number} — demo preview`,
+        });
+        router.push("/");
+        return;
+      }
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

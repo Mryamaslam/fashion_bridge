@@ -21,6 +21,9 @@ import {
   getFeaturedProducts, getCollections, getCategoryName,
 } from "@/lib/services/data";
 import { IMAGES } from "@/lib/constants/images";
+import { IS_STATIC_EXPORT } from "@/lib/constants/static-export";
+import { FeaturedProductsSection } from "@/components/shared/featured-products-section";
+import { HomeCollectionsSection } from "@/components/shared/collections-page-content";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Award, Globe, Factory, Package, Ship, Tag, Settings, Headphones, DollarSign, Clock,
@@ -29,10 +32,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 const heroSlides = IMAGES.hero;
 
 export default async function HomePage() {
-  const [featuredProducts, collections] = await Promise.all([
-    getFeaturedProducts(4),
-    getCollections(),
-  ]);
+  const featuredProducts = IS_STATIC_EXPORT ? [] : await getFeaturedProducts(4);
+  const collections = IS_STATIC_EXPORT ? [] : await getCollections();
   const featuredCollections = collections.slice(0, 3);
 
   return (
@@ -134,6 +135,9 @@ export default async function HomePage() {
       </section>
 
       {/* Featured Products */}
+      {IS_STATIC_EXPORT ? (
+        <FeaturedProductsSection />
+      ) : (
       <section className="bg-secondary/30 py-20 md:py-28">
         <div className="container mx-auto px-4">
           <SectionHeader label="Catalog" title="Featured Products" description="Top wholesale products ready for export." />
@@ -153,6 +157,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Manufacturing */}
       <section className="py-20 md:py-28">
@@ -205,6 +210,9 @@ export default async function HomePage() {
       </section>
 
       {/* Collections */}
+      {IS_STATIC_EXPORT ? (
+        <HomeCollectionsSection />
+      ) : (
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-4">
           <SectionHeader label="Collections" title="Seasonal Collections" description="Curated product lines for every season and style." />
@@ -215,6 +223,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Global Shipping */}
       <section className="border-y bg-secondary/30 py-20">

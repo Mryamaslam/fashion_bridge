@@ -1,46 +1,60 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
-import type { Metadata } from "next";
-import { getCollectionBySlug, getProductsByCollection } from "@/lib/services/data";
+import { Loader2 } from "lucide-react";
 import { FadeIn } from "@/components/animations/motion";
 import { ProductCard } from "@/components/shared/product-card";
 import { SafeImage } from "@/components/shared/safe-image";
 import { Badge } from "@/components/ui/badge";
-import { CollectionDetailClient } from "@/components/shared/collection-detail-client";
-import { getCollectionSlugsForExport } from "@/lib/services/static-params";
-import { IS_STATIC_EXPORT } from "@/lib/constants/static-export";
-import { mockCategories } from "@/lib/data/mock";
+import {
+  getClientCollectionBySlug,
+  getClientProductsByCollection,
+  getClientCategoryName,
+} from "@/lib/services/client-data";
+import type { Collection, Product } from "@/types";
 
-interface Props {
-  params: Promise<{ slug: string }>;
-}
+export function CollectionDetailClient({ slug }: { slug: string }) {
+  const [collection, setCollection] = useState<Collection | null | undefined>(undefined);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categoryNames, setCategoryNames] = useState<Record<string, string>>({});
 
-export async function generateStaticParams() {
-  return getCollectionSlugsForExport();
-}
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const col = await getClientCollectionBySlug(slug);
+      if (cancelled) return;
+      if (!col) {
+        setCollection(null);
+        return;
+      }
+      setCollection(col);
+      const list = await getClientProductsByCollection(col.id);
+      if (cancelled) return;
+      setProducts(list);
+      const names: Record<string, string> = {};
+      for (const p of list) {
+        if (p.category_id && !names[p.category_id]) {
+          const name = await getClientCategoryName(p.category_id);
+          if (name) names[p.category_id] = name;
+        }
+      }
+      if (!cancelled) setCategoryNames(names);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  if (IS_STATIC_EXPORT) {
-    return { title: slug.replace(/-/g, " ") };
+  if (collection === undefined) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center pt-28">
+        <Loader2 className="h-8 w-8 animate-spin text-gold" />
+      </div>
+    );
   }
-  const collection = await getCollectionBySlug(slug);
-  if (!collection) return { title: "Collection Not Found" };
-  return { title: collection.name, description: collection.description || undefined };
-}
 
-export default async function CollectionDetailPage({ params }: Props) {
-  const { slug } = await params;
-
-  if (IS_STATIC_EXPORT) {
-    return <CollectionDetailClient slug={slug} />;
-  }
-
-  const collection = await getCollectionBySlug(slug);
   if (!collection) notFound();
-
-  const products = await getProductsByCollection(collection.id);
-  const getCategoryName = (id: string | null) =>
-    mockCategories.find((c) => c.id === id)?.name;
 
   return (
     <>
@@ -80,7 +94,9 @@ export default async function CollectionDetailPage({ params }: Props) {
                 <ProductCard
                   key={product.id}
                   product={product}
-                  categoryName={getCategoryName(product.category_id ?? null)}
+                  categoryName={
+                    product.category_id ? categoryNames[product.category_id] : undefined
+                  }
                 />
               ))}
             </div>

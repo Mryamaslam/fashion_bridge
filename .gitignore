@@ -40,6 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+.github-pages-stash/
+
 .vercel
 
 tmp-img-check/
