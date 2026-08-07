@@ -1,6 +1,7 @@
 import type { Product } from "@/types";
 import { IMAGES } from "@/lib/constants/images";
 import { slugify } from "@/lib/utils";
+import { resolveProductImage } from "@/lib/utils/product-image-map";
 
 const { products: prod } = IMAGES;
 
@@ -596,8 +597,7 @@ export function generateCatalogProducts(): Product[] {
       const name = cat.names[i];
       const slug = slugify(name);
       const colors = [...pick(COLOR_SETS, i)];
-      const uniquePool = [...new Set(cat.imagePool)];
-      const images = [uniquePool[i % uniquePool.length]];
+      const images = [resolveProductImage(name, cat.id, slug)];
 
       products.push({
         id: `${cat.id}-${num}`,
