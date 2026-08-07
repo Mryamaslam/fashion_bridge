@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "deploy:netlify": "netlify deploy --build --prod",
-    "deploy:netlify:preview": "netlify deploy --build"
+    "deploy:netlify:preview": "netlify deploy --build",
+    "deploy:vercel": "vercel --prod"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

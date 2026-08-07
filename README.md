@@ -81,6 +81,53 @@ src/
 
 See `.env.example` for all required variables.
 
+## Deploy to Vercel (recommended — connected to GitHub)
+
+Live repo: [github.com/Mryamaslam/fashion_bridge](https://github.com/Mryamaslam/fashion_bridge)  
+GitHub preview URL (`.io`): **https://mryamaslam.github.io/fashion_bridge**
+
+### Auto-deploy from GitHub
+
+1. Connect repo at [vercel.com/new](https://vercel.com/new) → import `Mryamaslam/fashion_bridge`
+2. **Production branch:** `master` (not `main`)
+3. Framework: **Next.js** (auto-detected)
+4. Add environment variable:
+
+| Variable | Value |
+|----------|-------|
+| `NEXT_PUBLIC_SITE_URL` | `https://mryamaslam.github.io/fashion_bridge` |
+
+5. Every push to `master` triggers a new production deploy.
+
+`vercel.json` in the repo forces deploys from the `master` branch.
+
+### GitHub repo homepage
+
+In GitHub → **Settings** → **General** → **Website**, set:
+
+```
+https://mryamaslam.github.io/fashion_bridge
+```
+
+### Manual Vercel deploy
+
+```bash
+npx vercel login
+npm run deploy:vercel
+```
+
+### GitHub Actions (optional backup deploy)
+
+If Vercel webhook misses a push, add these secrets in GitHub → Settings → Secrets:
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+The workflow `.github/workflows/vercel-deploy.yml` redeploys on every `master` push.
+
+---
+
 ## Deploy to Netlify
 
 The project includes `netlify.toml` and `@netlify/plugin-nextjs` for Next.js 16 SSR on Netlify.

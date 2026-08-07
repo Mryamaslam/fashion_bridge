@@ -1,10 +1,14 @@
+import { getSiteUrl, GITHUB_LIVE_URL, GITHUB_REPO } from "@/lib/constants/deploy";
+
 export const SITE = {
   name: "Fashion Bridge International",
   shortName: "FBI",
   tagline: "Premium Apparel Export Worldwide",
   description:
     "Fashion Bridge International is a leading B2B apparel and fashion products exporter, delivering premium T-Shirts, Polo Shirts, Hoodies, Denim, Footwear, and Accessories to buyers worldwide.",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+  url: getSiteUrl(),
+  githubUrl: GITHUB_REPO,
+  liveUrl: GITHUB_LIVE_URL,
   email: "export@fashionbridge.com",
   phone: "+1 (555) 123-4567",
   address: "150 Fashion District Blvd, New York, NY 10001, USA",
