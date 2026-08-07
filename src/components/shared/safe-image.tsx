@@ -4,6 +4,7 @@ import Image, { type ImageProps } from "next/image";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { IMAGES } from "@/lib/constants/images";
+import { IS_STATIC_EXPORT } from "@/lib/constants/static-export";
 import { resolveAssetPath } from "@/lib/utils/asset-path";
 
 interface SafeImageProps extends Omit<ImageProps, "src" | "onError"> {
@@ -16,6 +17,9 @@ export function SafeImage({
   fallback = IMAGES.placeholder,
   alt,
   className,
+  fill,
+  priority,
+  sizes,
   ...props
 }: SafeImageProps) {
   const resolved = resolveAssetPath(src || fallback);
@@ -28,18 +32,47 @@ export function SafeImage({
     setHasError(false);
   }, [src, fallback]);
 
+  const currentSrc = hasError ? resolvedFallback : imgSrc;
+
+  const handleError = () => {
+    if (!hasError) {
+      setHasError(true);
+      setImgSrc(resolvedFallback);
+    }
+  };
+
+  const imageClassName = cn(
+    className,
+    fill && "absolute inset-0 h-full w-full",
+    hasError && "object-contain p-8 bg-muted"
+  );
+
+  // GitHub Pages static export: native img avoids next/image basePath conflicts
+  if (IS_STATIC_EXPORT) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={currentSrc}
+        alt={alt ?? ""}
+        loading={priority ? "eager" : "lazy"}
+        decoding="async"
+        sizes={sizes}
+        className={imageClassName}
+        onError={handleError}
+      />
+    );
+  }
+
   return (
     <Image
       {...props}
-      src={hasError ? resolvedFallback : imgSrc}
-      alt={alt}
-      className={cn(className, hasError && "object-contain p-8 bg-muted")}
-      onError={() => {
-        if (!hasError) {
-          setHasError(true);
-          setImgSrc(fallback);
-        }
-      }}
+      fill={fill}
+      priority={priority}
+      sizes={sizes}
+      src={currentSrc}
+      alt={alt ?? ""}
+      className={imageClassName}
+      onError={handleError}
     />
   );
 }
