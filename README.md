@@ -108,14 +108,11 @@ Without secrets, the site falls back to demo mock data.
 ### One-time GitHub setup
 
 1. Repo → **Settings** → **Pages**
-2. **Build and deployment** → Source: **GitHub Actions**
-3. Push to `master` (or run the workflow manually from **Actions**)
-
-Set repo homepage (**Settings** → **General** → **Website**) to:
-
-```
-https://mryamaslam.github.io/fashion_bridge
-```
+2. **Build and deployment** → Source: **GitHub Actions** (not "Deploy from a branch")
+3. Repo → **Settings** → **Secrets and variables** → **Actions** → add Supabase secrets (see above)
+4. Push to `master` (or **Actions** → **Deploy to GitHub Pages** → **Run workflow**)
+5. First deploy: open the workflow run → approve **github-pages** environment if prompted
+6. Wait 2–3 minutes, then open: https://mryamaslam.github.io/fashion_bridge/
 
 ### Local GitHub Pages build
 
