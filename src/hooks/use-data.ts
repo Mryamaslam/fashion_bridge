@@ -12,8 +12,10 @@ import {
   updateClientProduct,
   deleteClientProduct,
   updateClientInquiry,
+  getClientCategories,
+  getClientAllCollections,
 } from "@/lib/services/client-data";
-import type { ProductFilters, Product, Inquiry, InquiryStatus } from "@/types";
+import type { ProductFilters, Product, Inquiry, InquiryStatus, Category, Collection } from "@/types";
 
 /** GitHub Pages has no API routes — read/write Supabase from the browser */
 const useClientLayer = IS_STATIC_EXPORT;
@@ -55,6 +57,34 @@ export function useAdminProducts() {
       const res = await fetch("/api/admin/products");
       if (!res.ok) throw new Error("Failed to fetch products");
       return res.json() as Promise<Product[]>;
+    },
+  });
+}
+
+/** Real categories — used for admin category assignment + display names (IDs are DB UUIDs, not the mock "1".."8" set) */
+export function useCategories() {
+  return useQuery({
+    queryKey: ["categories"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      if (useClientLayer) return getClientCategories();
+      const res = await fetch("/api/categories");
+      if (!res.ok) throw new Error("Failed to fetch categories");
+      return res.json() as Promise<Category[]>;
+    },
+  });
+}
+
+/** All collections (incl. drafts) — for the admin product form's collection picker */
+export function useAdminCollections() {
+  return useQuery({
+    queryKey: ["admin-collections"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      if (useClientLayer) return getClientAllCollections();
+      const res = await fetch("/api/collections");
+      if (!res.ok) throw new Error("Failed to fetch collections");
+      return res.json() as Promise<Collection[]>;
     },
   });
 }

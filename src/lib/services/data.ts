@@ -33,11 +33,15 @@ export async function getProducts(
   pageSize = 24
 ): Promise<PaginatedResponse<Product>> {
   // Public catalog always reads the same inventory as admin (Supabase or in-memory mock).
-  const all = await getAllProducts();
+  const [all, categories, collections] = await Promise.all([
+    getAllProducts(),
+    getCategories(),
+    getAllCollections(),
+  ]);
   const base = filters.status
     ? all.filter((p) => p.status === filters.status)
     : all.filter((p) => p.status === "active");
-  const filtered = filterProducts(base, filters);
+  const filtered = filterProducts(base, filters, categories, collections);
   return paginate(filtered, page, pageSize);
 }
 
@@ -341,9 +345,9 @@ export async function deleteProduct(id: string) {
   if (idx >= 0) mockProducts.splice(idx, 1);
 }
 
-export function getCategoryName(categoryId: string | null): string | undefined {
+export function getCategoryName(categoryId: string | null, categories: Category[]): string | undefined {
   if (!categoryId) return undefined;
-  return mockCategories.find((c) => c.id === categoryId)?.name;
+  return categories.find((c) => c.id === categoryId)?.name;
 }
 
 /** Active products in a collection — same inventory source as admin. */

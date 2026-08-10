@@ -2,13 +2,20 @@ import { NextResponse } from "next/server";
 import { getAllProducts, createProduct } from "@/lib/services/data";
 import { productSchema } from "@/lib/validations/schemas";
 import { slugify, generateSKU } from "@/lib/utils";
+import { requireAdmin } from "@/lib/supabase/require-admin";
 
 export async function GET() {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   const products = await getAllProducts();
   return NextResponse.json(products);
 }
 
 export async function POST(request: Request) {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json();
     const parsed = productSchema.parse(body);

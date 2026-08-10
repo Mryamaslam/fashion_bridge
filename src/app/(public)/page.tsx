@@ -18,7 +18,7 @@ import {
   STATS, CATEGORIES, WHY_CHOOSE_US, TESTIMONIALS, EXPORT_COUNTRIES, MANUFACTURING_STEPS,
 } from "@/lib/constants/site";
 import {
-  getFeaturedProducts, getCollections, getCategoryName,
+  getFeaturedProducts, getCollections, getCategoryName, getCategories,
 } from "@/lib/services/data";
 import { IMAGES } from "@/lib/constants/images";
 import { IS_STATIC_EXPORT } from "@/lib/constants/static-export";
@@ -35,6 +35,7 @@ export default async function HomePage() {
   const featuredProducts = IS_STATIC_EXPORT ? [] : await getFeaturedProducts(4);
   const collections = IS_STATIC_EXPORT ? [] : await getCollections();
   const featuredCollections = collections.slice(0, 3);
+  const categories = IS_STATIC_EXPORT ? [] : await getCategories();
 
   return (
     <>
@@ -146,7 +147,7 @@ export default async function HomePage() {
               <ProductCard
                 key={product.id}
                 product={product}
-                categoryName={getCategoryName(product.category_id ?? null)}
+                categoryName={getCategoryName(product.category_id ?? null, categories)}
               />
             ))}
           </div>

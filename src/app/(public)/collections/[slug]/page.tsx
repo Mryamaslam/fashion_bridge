@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getCollectionBySlug, getProductsByCollection } from "@/lib/services/data";
+import { getCollectionBySlug, getProductsByCollection, getCategoryName, getCategories } from "@/lib/services/data";
 import { FadeIn } from "@/components/animations/motion";
 import { ProductCard } from "@/components/shared/product-card";
 import { SafeImage } from "@/components/shared/safe-image";
@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { CollectionDetailClient } from "@/components/shared/collection-detail-client";
 import { getCollectionSlugsForExport } from "@/lib/services/static-params";
 import { IS_STATIC_EXPORT } from "@/lib/constants/static-export";
-import { mockCategories } from "@/lib/data/mock";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -38,9 +37,10 @@ export default async function CollectionDetailPage({ params }: Props) {
   const collection = await getCollectionBySlug(slug);
   if (!collection) notFound();
 
-  const products = await getProductsByCollection(collection.id);
-  const getCategoryName = (id: string | null) =>
-    mockCategories.find((c) => c.id === id)?.name;
+  const [products, categories] = await Promise.all([
+    getProductsByCollection(collection.id),
+    getCategories(),
+  ]);
 
   return (
     <>
@@ -80,7 +80,7 @@ export default async function CollectionDetailPage({ params }: Props) {
                 <ProductCard
                   key={product.id}
                   product={product}
-                  categoryName={getCategoryName(product.category_id ?? null)}
+                  categoryName={getCategoryName(product.category_id ?? null, categories)}
                 />
               ))}
             </div>

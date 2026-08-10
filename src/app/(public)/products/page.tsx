@@ -10,10 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useProducts } from "@/hooks/use-data";
+import { useProducts, useCategories } from "@/hooks/use-data";
 import { CATEGORIES } from "@/lib/constants/site";
 import { IMAGES } from "@/lib/constants/images";
-import { mockCategories } from "@/lib/data/mock";
 
 function ProductsContent() {
   const searchParams = useSearchParams();
@@ -30,6 +29,7 @@ function ProductsContent() {
   );
 
   const { data, isLoading } = useProducts(filters, page);
+  const { data: categories } = useCategories();
 
   const clearFilters = () => {
     setSearch("");
@@ -40,7 +40,7 @@ function ProductsContent() {
   const hasFilters = search || category;
 
   const getCategoryName = (id: string | null) =>
-    mockCategories.find((c) => c.id === id)?.name;
+    (categories || []).find((c) => c.id === id)?.name;
 
   return (
     <>

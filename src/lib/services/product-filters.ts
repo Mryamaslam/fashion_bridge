@@ -26,11 +26,11 @@ export function filterProducts(
       if (!p.name.toLowerCase().includes(q) && !p.sku.toLowerCase().includes(q)) return false;
     }
     if (filters.category) {
-      const cat = mockCategories.find((c) => c.slug === filters.category);
+      const cat = categories.find((c) => c.slug === filters.category);
       if (cat && p.category_id !== cat.id) return false;
     }
     if (filters.collection) {
-      const col = mockCollections.find((c) => c.slug === filters.collection);
+      const col = collections.find((c) => c.slug === filters.collection);
       if (col && p.collection_id !== col.id) return false;
     }
     if (filters.minPrice !== undefined && p.wholesale_price < filters.minPrice) return false;

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Plus, Search, Edit, Trash2, Copy, Download } from "lucide-react";
 import { toast } from "sonner";
 import { AdminHeader } from "@/components/admin/sidebar";
-import { useAdminProducts, useProductMutations } from "@/hooks/use-data";
+import { useAdminProducts, useProductMutations, useCategories } from "@/hooks/use-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -16,10 +16,10 @@ import { ProductForm } from "@/components/admin/product-form";
 import { formatCurrency } from "@/lib/utils";
 import { exportToCSV } from "@/lib/utils/export";
 import type { Product } from "@/types";
-import { mockCategories } from "@/lib/data/mock";
 
 export default function AdminProductsPage() {
   const { data: products, isLoading } = useAdminProducts();
+  const { data: categories } = useCategories();
   const { create, update, remove } = useProductMutations();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -31,7 +31,7 @@ export default function AdminProductsPage() {
       p.sku.toLowerCase().includes(search.toLowerCase())
   );
 
-  const categoryCounts = mockCategories.map((cat) => ({
+  const categoryCounts = (categories || []).map((cat) => ({
     ...cat,
     count: (products || []).filter((p) => p.category_id === cat.id).length,
   }));
@@ -61,7 +61,7 @@ export default function AdminProductsPage() {
   };
 
   const getCategoryName = (id: string | null) =>
-    mockCategories.find((c) => c.id === id)?.name || "—";
+    (categories || []).find((c) => c.id === id)?.name || "—";
 
   const handleExportCSV = () => {
     if (!filtered.length) {

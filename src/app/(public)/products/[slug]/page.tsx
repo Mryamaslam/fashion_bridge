@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getProductBySlug, getCategoryName } from "@/lib/services/data";
+import { getProductBySlug, getCategoryName, getCategories } from "@/lib/services/data";
 import { ProductDetailView } from "@/components/shared/product-detail-view";
 import { ProductDetailClient } from "@/components/shared/product-detail-client";
 import { getProductSlugsForExport } from "@/lib/services/static-params";
@@ -40,7 +40,8 @@ export default async function ProductDetailPage({ params }: Props) {
   const product = await getProductBySlug(slug);
   if (!product || product.status !== "active") notFound();
 
-  const categoryName = getCategoryName(product.category_id ?? null);
+  const categories = await getCategories();
+  const categoryName = getCategoryName(product.category_id ?? null, categories);
 
   return <ProductDetailView product={product} categoryName={categoryName} />;
 }

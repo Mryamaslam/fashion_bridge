@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { COLORS, SIZES } from "@/lib/constants/site";
-import { mockCategories, mockCollections } from "@/lib/data/mock";
+import { useCategories, useAdminCollections } from "@/hooks/use-data";
 import { generateSKU } from "@/lib/utils";
 import type { Product } from "@/types";
 
@@ -21,6 +21,8 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ product, onSubmit }: ProductFormProps) {
+  const { data: categories } = useCategories();
+  const { data: collections } = useAdminCollections();
   const {
     register,
     handleSubmit,
@@ -100,7 +102,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
           <Select defaultValue={product?.category_id || ""} onValueChange={(v) => setValue("category_id", v)}>
             <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
             <SelectContent>
-              {mockCategories.map((c) => (
+              {(categories || []).map((c) => (
                 <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
               ))}
             </SelectContent>
@@ -111,7 +113,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
           <Select defaultValue={product?.collection_id || ""} onValueChange={(v) => setValue("collection_id", v)}>
             <SelectTrigger><SelectValue placeholder="Select collection" /></SelectTrigger>
             <SelectContent>
-              {mockCollections.map((c) => (
+              {(collections || []).map((c) => (
                 <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
               ))}
             </SelectContent>
@@ -132,6 +134,10 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
         <div className="space-y-2">
           <Label>Stock Quantity</Label>
           <Input type="number" {...register("stock_quantity", { valueAsNumber: true })} />
+        </div>
+        <div className="space-y-2">
+          <Label>Low Stock Threshold</Label>
+          <Input type="number" {...register("low_stock_threshold", { valueAsNumber: true })} />
         </div>
         <div className="space-y-2">
           <Label>Material</Label>

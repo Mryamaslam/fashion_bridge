@@ -16,6 +16,7 @@ import type {
   DashboardStats,
   InquiryStatus,
   Collection,
+  Category,
 } from "@/types";
 
 const useSupabase = () => isSupabaseConfigured();
@@ -46,6 +47,16 @@ export function getClientFeaturedProducts(limit = 4): Product[] | Promise<Produc
 export function getClientCollections(): Collection[] | Promise<Collection[]> {
   if (useSupabase()) return sb.fetchCollections(true);
   return mockCollections.filter((c) => c.status === "active");
+}
+
+export function getClientCategories(): Category[] | Promise<Category[]> {
+  if (useSupabase()) return sb.fetchCategories();
+  return mockCategories;
+}
+
+export function getClientAllCollections(): Collection[] | Promise<Collection[]> {
+  if (useSupabase()) return sb.fetchCollections(false);
+  return mockCollections;
 }
 
 export function getClientCollectionBySlug(slug: string) {
