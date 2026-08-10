@@ -6,6 +6,46 @@ const P = IMAGES.products;
 /** One unique photo per polo SKU — file name matches product slug */
 const poloPath = (slug: string) => `/images/products/polos/${slug}.png`;
 
+/** One unique photo per bag SKU — file name matches product slug */
+const bagPath = (slug: string) => `/images/products/bags/${slug}.png`;
+
+const BAG_PRODUCT_SLUGS = [
+  "canvas-tote-bag",
+  "urban-daypack-backpack",
+  "crossbody-sling-bag",
+  "sports-gym-duffel-bag",
+  "structured-mini-tote",
+  "shopper-market-tote",
+  "laptop-commuter-backpack",
+  "weekend-travel-duffel",
+  "gold-accent-crossbody",
+  "brown-leather-weekender",
+  "roll-top-waterproof-backpack",
+  "drawstring-gym-bag",
+  "insulated-cooler-tote",
+  "foldable-shopping-bag",
+  "messenger-laptop-bag",
+  "camera-insert-bag",
+  "clear-stadium-tote",
+  "woven-straw-beach-tote",
+  "premium-leather-backpack",
+  "anti-theft-travel-backpack",
+  "kids-school-backpack",
+  "cosmetic-pouch-set",
+  "garment-travel-bag",
+  "tool-organizer-bag",
+  "promotional-event-tote",
+  "rfid-travel-wallet-bag",
+  "convertible-backpack-tote",
+  "hiking-daypack-20l",
+  "executive-briefcase-bag",
+  "mini-belt-bag",
+] as const;
+
+const BAG_SLUG_IMAGES = Object.fromEntries(
+  BAG_PRODUCT_SLUGS.map((slug) => [slug, bagPath(slug)])
+) as Record<string, string>;
+
 const POLO_PRODUCT_SLUGS = [
   "classic-pique-polo-shirt",
   "performance-dry-fit-polo",
@@ -67,6 +107,7 @@ export function categoryKeyFromProduct(
 /** Exact product slug → catalog image (name-accurate) */
 const SLUG_IMAGE_MAP: Record<string, string> = {
   ...POLO_SLUG_IMAGES,
+  ...BAG_SLUG_IMAGES,
 
   // T-shirts
   "premium-cotton-crew-neck-tee": P.tshirt,
