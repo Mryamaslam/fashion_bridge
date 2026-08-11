@@ -25,3 +25,4 @@ USING (bucket_id = 'media' AND is_admin())
 WITH CHECK (bucket_id = 'media' AND is_admin());
 
 -- Service role (seed script) bypasses RLS
+
