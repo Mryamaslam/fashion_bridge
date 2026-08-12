@@ -7,14 +7,13 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line,
 } from "recharts";
 import { AdminHeader } from "@/components/admin/sidebar";
-import { useDashboardStats } from "@/hooks/use-data";
+import { useDashboardStats, useAdminOrders, useInquiries } from "@/hooks/use-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FadeIn } from "@/components/animations/motion";
 import { formatCurrency } from "@/lib/utils";
-import { revenueChartData } from "@/lib/data/mock";
-import { mockOrders, mockInquiries } from "@/lib/data/mock";
+import { buildRevenueSeries } from "@/lib/utils/analytics";
 
 function StatCard({
   title, value, icon: Icon, trend, variant,
@@ -49,6 +48,9 @@ function StatCard({
 
 export default function AdminDashboardPage() {
   const { data: stats, isLoading } = useDashboardStats();
+  const { data: orders } = useAdminOrders();
+  const { data: inquiries } = useInquiries();
+  const revenueSeries = buildRevenueSeries(orders || []);
 
   return (
     <>
@@ -84,7 +86,7 @@ export default function AdminDashboardPage() {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={280}>
-                  <LineChart data={revenueChartData}>
+                  <LineChart data={revenueSeries}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                     <XAxis dataKey="month" className="text-xs" />
                     <YAxis className="text-xs" />
@@ -103,7 +105,7 @@ export default function AdminDashboardPage() {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={revenueChartData}>
+                  <BarChart data={revenueSeries}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                     <XAxis dataKey="month" className="text-xs" />
                     <YAxis className="text-xs" />
@@ -124,7 +126,10 @@ export default function AdminDashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockOrders.slice(0, 5).map((order) => (
+                  {!orders?.length && (
+                    <p className="text-sm text-muted-foreground">No orders yet.</p>
+                  )}
+                  {(orders || []).slice(0, 5).map((order) => (
                     <div key={order.id} className="flex items-center justify-between border-b border-border/50 pb-3 last:border-0">
                       <div>
                         <p className="font-medium text-sm">{order.order_number}</p>
@@ -148,7 +153,10 @@ export default function AdminDashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockInquiries.slice(0, 5).map((inquiry) => (
+                  {!inquiries?.length && (
+                    <p className="text-sm text-muted-foreground">No inquiries yet.</p>
+                  )}
+                  {(inquiries || []).slice(0, 5).map((inquiry) => (
                     <div key={inquiry.id} className="flex items-center justify-between border-b border-border/50 pb-3 last:border-0">
                       <div>
                         <p className="font-medium text-sm">{inquiry.name}</p>

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { updateInquiry } from "@/lib/services/data";
+import { updateOrderStatus } from "@/lib/services/data";
 import { requireAdmin } from "@/lib/supabase/require-admin";
 
 export async function PATCH(
@@ -12,11 +12,11 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const inquiry = await updateInquiry(id, body);
-    if (!inquiry) {
-      return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });
+    const order = await updateOrderStatus(id, body);
+    if (!order) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
-    return NextResponse.json(inquiry);
+    return NextResponse.json(order);
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Update failed" },

@@ -1,24 +1,25 @@
 "use client";
 
-import { useState } from "react";
 import { toast } from "sonner";
 import { AdminHeader } from "@/components/admin/sidebar";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { useAdminOrders, useUpdateOrder } from "@/hooks/use-data";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { exportOrdersPDF } from "@/lib/utils/export";
-import { mockOrders } from "@/lib/data/mock";
 import { ORDER_STATUSES } from "@/lib/constants/site";
 import { Download } from "lucide-react";
-import type { Order, OrderStatus } from "@/types";
+import type { OrderStatus } from "@/types";
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const { data: orders, isLoading } = useAdminOrders();
+  const updateOrder = useUpdateOrder();
 
   const handleExportInvoices = async () => {
-    if (!orders.length) {
+    if (!orders?.length) {
       toast.error("No orders to export");
       return;
     }
@@ -30,11 +31,13 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const handleStatusChange = (id: string, status: OrderStatus) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, status, updated_at: new Date().toISOString() } : o))
-    );
-    toast.success("Order status updated");
+  const handleStatusChange = async (id: string, status: OrderStatus) => {
+    try {
+      await updateOrder.mutateAsync({ id, status });
+      toast.success("Order status updated");
+    } catch {
+      toast.error("Failed to update order status");
+    }
   };
 
   return (
@@ -60,7 +63,11 @@ export default function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => (
+              {isLoading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <tr key={i}><td colSpan={7} className="px-4 py-3"><Skeleton className="h-8" /></td></tr>
+                ))
+              ) : (orders || []).map((order) => (
                 <tr key={order.id} className="border-b last:border-0 hover:bg-muted/30">
                   <td className="px-4 py-3 font-medium">{order.order_number}</td>
                   <td className="px-4 py-3">
@@ -88,6 +95,9 @@ export default function AdminOrdersPage() {
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(order.created_at)}</td>
                 </tr>
               ))}
+              {!isLoading && !orders?.length && (
+                <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">No orders yet.</td></tr>
+              )}
             </tbody>
           </table>
         </div>

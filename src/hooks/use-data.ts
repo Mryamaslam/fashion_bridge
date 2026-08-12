@@ -14,8 +14,18 @@ import {
   updateClientInquiry,
   getClientCategories,
   getClientAllCollections,
+  getClientContactMessages,
+  getClientOrders,
+  updateClientOrder,
+  createClientCollection,
+  updateClientCollection,
+  deleteClientCollection,
+  getClientMedia,
+  uploadClientMedia,
+  deleteClientMedia,
+  getClientOrderItems,
 } from "@/lib/services/client-data";
-import type { ProductFilters, Product, Inquiry, InquiryStatus, Category, Collection } from "@/types";
+import type { ProductFilters, Product, Inquiry, InquiryStatus, Category, Collection, ContactMessage, Order, OrderStatus, Media, OrderItem } from "@/types";
 
 /** GitHub Pages has no API routes — read/write Supabase from the browser */
 const useClientLayer = IS_STATIC_EXPORT;
@@ -117,6 +127,123 @@ export function useInquiries() {
   });
 }
 
+export function useAdminOrders() {
+  return useQuery({
+    queryKey: ["admin-orders"],
+    staleTime: 0,
+    refetchOnMount: "always",
+    queryFn: async () => {
+      if (useClientLayer) {
+        return getClientOrders();
+      }
+      const res = await fetch("/api/admin/orders");
+      if (!res.ok) throw new Error("Failed to fetch orders");
+      return res.json() as Promise<Order[]>;
+    },
+  });
+}
+
+export function useUpdateOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...data
+    }: { id: string; status?: OrderStatus; tracking_number?: string | null; notes?: string | null }) => {
+      if (useClientLayer) {
+        return updateClientOrder(id, data);
+      }
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to update order");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    },
+  });
+}
+
+export function useOrderItems() {
+  return useQuery({
+    queryKey: ["order-items"],
+    queryFn: async () => {
+      if (useClientLayer) {
+        return getClientOrderItems();
+      }
+      const res = await fetch("/api/admin/order-items");
+      if (!res.ok) throw new Error("Failed to fetch order items");
+      return res.json() as Promise<OrderItem[]>;
+    },
+  });
+}
+
+export function useMedia() {
+  return useQuery({
+    queryKey: ["media"],
+    staleTime: 0,
+    refetchOnMount: "always",
+    queryFn: async () => {
+      if (useClientLayer) {
+        return getClientMedia();
+      }
+      const res = await fetch("/api/admin/media");
+      if (!res.ok) throw new Error("Failed to fetch media");
+      return res.json() as Promise<Media[]>;
+    },
+  });
+}
+
+export function useMediaMutations() {
+  const queryClient = useQueryClient();
+
+  const upload = useMutation({
+    mutationFn: async ({ file, folder }: { file: File; folder?: string }) => {
+      if (useClientLayer) {
+        return uploadClientMedia(file, folder);
+      }
+      const formData = new FormData();
+      formData.append("file", file);
+      if (folder) formData.append("folder", folder);
+      const res = await fetch("/api/admin/media", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Failed to upload file");
+      return res.json();
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["media"] }),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      if (useClientLayer) {
+        return deleteClientMedia(id);
+      }
+      const res = await fetch(`/api/admin/media/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete file");
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["media"] }),
+  });
+
+  return { upload, remove };
+}
+
+export function useContactMessages() {
+  return useQuery({
+    queryKey: ["contact-messages"],
+    queryFn: async () => {
+      if (useClientLayer) {
+        return getClientContactMessages();
+      }
+      const res = await fetch("/api/admin/contact");
+      if (!res.ok) throw new Error("Failed to fetch contact messages");
+      return res.json() as Promise<ContactMessage[]>;
+    },
+  });
+}
+
 export function useCreateInquiry() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -198,6 +325,61 @@ export function useProductMutations() {
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["featured-products"] });
     },
+  });
+
+  return { create, update, remove };
+}
+
+export function useCollectionMutations() {
+  const queryClient = useQueryClient();
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin-collections"] });
+    queryClient.invalidateQueries({ queryKey: ["collections"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+  };
+
+  const create = useMutation({
+    mutationFn: async (data: Partial<Collection>) => {
+      if (useClientLayer) {
+        return createClientCollection(data);
+      }
+      const res = await fetch("/api/admin/collections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to create collection");
+      return res.json();
+    },
+    onSuccess: invalidate,
+  });
+
+  const update = useMutation({
+    mutationFn: async ({ id, ...data }: Partial<Collection> & { id: string }) => {
+      if (useClientLayer) {
+        return updateClientCollection(id, data);
+      }
+      const res = await fetch(`/api/admin/collections/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to update collection");
+      return res.json();
+    },
+    onSuccess: invalidate,
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      if (useClientLayer) {
+        return deleteClientCollection(id);
+      }
+      const res = await fetch(`/api/admin/collections/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete collection");
+    },
+    onSuccess: invalidate,
   });
 
   return { create, update, remove };

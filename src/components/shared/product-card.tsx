@@ -112,7 +112,7 @@ export function ProductCard({ product, categoryName, className }: ProductCardPro
           )}
           <div className="mt-3 flex items-center justify-between gap-2">
             <div>
-              <p className="text-lg font-bold">{formatCurrency(product.wholesale_price, currency.code)}</p>
+              <p className="text-lg font-bold">{formatCurrency(product.wholesale_price * currency.rate, currency.code)}</p>
               <p className="text-xs text-muted-foreground">MOQ: {product.moq} units</p>
             </div>
             <Button

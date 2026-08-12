@@ -1,45 +1,56 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { Plus, ExternalLink } from "lucide-react";
+import { Plus, ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminHeader } from "@/components/admin/sidebar";
 import { CollectionForm } from "@/components/admin/collection-form";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
-import { mockCollections } from "@/lib/data/mock";
-import { slugify } from "@/lib/utils";
+import { useAdminCollections, useCollectionMutations } from "@/hooks/use-data";
 import type { Collection } from "@/types";
 import type { CollectionFormData } from "@/lib/validations/schemas";
 
 export default function AdminCollectionsPage() {
-  const [collections, setCollections] = useState<Collection[]>(mockCollections);
+  const { data: collections, isLoading } = useAdminCollections();
+  const { create, update, remove } = useCollectionMutations();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<Collection | null>(null);
 
   const handleCreate = async (data: CollectionFormData) => {
-    const newCollection: Collection = {
-      id: String(Date.now()),
-      name: data.name,
-      slug: slugify(data.name),
-      description: data.description || null,
-      banner_url: data.banner_url || null,
-      thumbnail_url: data.thumbnail_url || null,
-      is_featured: data.is_featured,
-      is_seasonal: data.is_seasonal,
-      season: data.season || null,
-      status: data.status,
-      sort_order: data.sort_order,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    setCollections((prev) => [newCollection, ...prev]);
-    mockCollections.unshift(newCollection);
-    toast.success("Collection created");
-    setDialogOpen(false);
+    try {
+      await create.mutateAsync(data);
+      toast.success("Collection created");
+      setDialogOpen(false);
+    } catch {
+      toast.error("Failed to create collection");
+    }
+  };
+
+  const handleUpdate = async (data: CollectionFormData) => {
+    if (!editing) return;
+    try {
+      await update.mutateAsync({ id: editing.id, ...data });
+      toast.success("Collection updated");
+      setEditing(null);
+    } catch {
+      toast.error("Failed to update collection");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this collection? This cannot be undone.")) return;
+    try {
+      await remove.mutateAsync(id);
+      toast.success("Collection deleted");
+    } catch {
+      toast.error("Failed to delete collection");
+    }
   };
 
   return (
@@ -61,12 +72,41 @@ export default function AdminCollectionsPage() {
             </DialogContent>
           </Dialog>
         </div>
+
+        <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Collection</DialogTitle>
+            </DialogHeader>
+            {editing && <CollectionForm onSubmit={handleUpdate} initialData={editing} />}
+          </DialogContent>
+        </Dialog>
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {collections.map((col) => (
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-48 rounded-xl" />
+            ))
+          ) : (collections || []).map((col) => (
             <div key={col.id} className="rounded-xl border p-6 hover:shadow-md transition-shadow">
-              <div className="flex gap-2 mb-3">
-                {col.is_featured && <Badge variant="gold">Featured</Badge>}
-                <Badge variant="outline">{col.status}</Badge>
+              <div className="flex items-start justify-between">
+                <div className="flex gap-2 mb-3">
+                  {col.is_featured && <Badge variant="gold">Featured</Badge>}
+                  <Badge variant="outline">{col.status}</Badge>
+                </div>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditing(col)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => handleDelete(col.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                </div>
               </div>
               <h3 className="font-semibold text-lg">{col.name}</h3>
               <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{col.description}</p>
@@ -80,6 +120,9 @@ export default function AdminCollectionsPage() {
               )}
             </div>
           ))}
+          {!isLoading && !collections?.length && (
+            <p className="col-span-full py-12 text-center text-muted-foreground">No collections yet.</p>
+          )}
         </div>
       </div>
     </>

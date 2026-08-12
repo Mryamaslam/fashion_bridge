@@ -125,10 +125,10 @@ export function ProductDetailView({ product, categoryName }: ProductDetailViewPr
 
           <div className="mt-6 flex items-baseline gap-3">
             <p className="text-3xl font-bold text-gold">
-              {formatCurrency(product.wholesale_price, currency.code)}
+              {formatCurrency(product.wholesale_price * currency.rate, currency.code)}
             </p>
             <p className="text-sm text-muted-foreground">
-              Retail: {formatCurrency(product.price, currency.code)}
+              Retail: {formatCurrency(product.price * currency.rate, currency.code)}
             </p>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">MOQ: {product.moq} units</p>

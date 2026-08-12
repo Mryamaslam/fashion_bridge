@@ -90,7 +90,7 @@ export default function CartPage() {
                       </Link>
                       <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>
                       <p className="mt-1 text-sm font-medium">
-                        {formatCurrency(item.wholesale_price, currency.code)} / unit
+                        {formatCurrency(item.wholesale_price * currency.rate, currency.code)} / unit
                       </p>
                       <p className="text-xs text-muted-foreground">MOQ: {item.moq}</p>
                     </div>
@@ -119,7 +119,7 @@ export default function CartPage() {
                         </Button>
                       </div>
                       <p className="w-24 text-right text-sm font-semibold">
-                        {formatCurrency(item.wholesale_price * item.quantity, currency.code)}
+                        {formatCurrency(item.wholesale_price * item.quantity * currency.rate, currency.code)}
                       </p>
                       <Button
                         type="button"
@@ -143,10 +143,11 @@ export default function CartPage() {
                 <h2 className="font-semibold">Order summary</h2>
                 <div className="mt-4 flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal (wholesale)</span>
-                  <span className="font-semibold">{formatCurrency(subtotal, currency.code)}</span>
+                  <span className="font-semibold">{formatCurrency(subtotal * currency.rate, currency.code)}</span>
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">
                   Final pricing, shipping, and MOQ confirmation happen when you request a quote.
+                  Displayed in your selected currency; orders are invoiced in USD.
                 </p>
                 <Button asChild variant="gold" className="mt-6 w-full">
                   <Link href={inquiryHref}>

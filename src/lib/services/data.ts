@@ -6,6 +6,7 @@ import {
   mockInquiries,
   mockOrders,
   mockOrderItems,
+  mockContactMessages,
   mockDashboardStats,
 } from "@/lib/data/mock";
 import { filterProducts, paginate } from "@/lib/services/product-filters";
@@ -13,7 +14,10 @@ import type {
   Product,
   Collection,
   Category,
+  ContactMessage,
   Inquiry,
+  InquiryStatus,
+  Media,
   Order,
   OrderItem,
   ProductFilters,
@@ -239,6 +243,53 @@ export async function getAllCollections(): Promise<Collection[]> {
   return mockCollections;
 }
 
+export async function createCollection(collection: Partial<Collection>): Promise<Collection> {
+  const supabase = await getSupabaseServer();
+  if (supabase) {
+    const { data, error } = await supabase.from("collections").insert(collection).select().single();
+    if (error) throw error;
+    return data as Collection;
+  }
+  const newCollection = {
+    ...collection,
+    id: String(Date.now()),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  } as Collection;
+  mockCollections.unshift(newCollection);
+  return newCollection;
+}
+
+export async function updateCollection(id: string, updates: Partial<Collection>): Promise<Collection> {
+  const supabase = await getSupabaseServer();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("collections")
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as Collection;
+  }
+  const idx = mockCollections.findIndex((c) => c.id === id);
+  if (idx >= 0) {
+    mockCollections[idx] = { ...mockCollections[idx], ...updates, updated_at: new Date().toISOString() };
+  }
+  return mockCollections[idx];
+}
+
+export async function deleteCollection(id: string): Promise<void> {
+  const supabase = await getSupabaseServer();
+  if (supabase) {
+    const { error } = await supabase.from("collections").delete().eq("id", id);
+    if (error) throw error;
+    return;
+  }
+  const idx = mockCollections.findIndex((c) => c.id === id);
+  if (idx >= 0) mockCollections.splice(idx, 1);
+}
+
 export async function getCategories(): Promise<Category[]> {
   const supabase = await getSupabaseServer();
   if (supabase) {
@@ -264,6 +315,40 @@ export async function getOrders(): Promise<Order[]> {
     return (data as Order[]) || [];
   }
   return mockOrders;
+}
+
+export async function updateOrderStatus(
+  id: string,
+  updates: { status?: Order["status"]; tracking_number?: string | null; notes?: string | null }
+): Promise<Order | null> {
+  const supabase = await getSupabaseServer();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("orders")
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as Order;
+  }
+  const idx = mockOrders.findIndex((o) => o.id === id);
+  if (idx < 0) return null;
+  mockOrders[idx] = {
+    ...mockOrders[idx],
+    ...updates,
+    updated_at: new Date().toISOString(),
+  };
+  return mockOrders[idx];
+}
+
+export async function getAllOrderItems(): Promise<OrderItem[]> {
+  const supabase = await getSupabaseServer();
+  if (supabase) {
+    const { data } = await supabase.from("order_items").select("*");
+    return (data as OrderItem[]) || [];
+  }
+  return mockOrderItems;
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
@@ -308,6 +393,90 @@ export async function createInquiry(data: Omit<Inquiry, "id" | "status" | "notes
   };
   mockInquiries.unshift(inquiry);
   return inquiry;
+}
+
+export async function updateInquiry(
+  id: string,
+  updates: { status?: InquiryStatus; notes?: string }
+): Promise<Inquiry | null> {
+  const supabase = await getSupabaseServer();
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("inquiries")
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as Inquiry;
+  }
+  const idx = mockInquiries.findIndex((i) => i.id === id);
+  if (idx < 0) return null;
+  mockInquiries[idx] = {
+    ...mockInquiries[idx],
+    ...updates,
+    updated_at: new Date().toISOString(),
+  };
+  return mockInquiries[idx];
+}
+
+export async function getMedia(): Promise<Media[]> {
+  const supabase = await getSupabaseServer();
+  if (supabase) {
+    const { data } = await supabase.from("media").select("*").order("created_at", { ascending: false });
+    return (data as Media[]) || [];
+  }
+  return [];
+}
+
+/** Deletes the DB row and, when Supabase is configured, the backing Storage object. */
+export async function deleteMedia(id: string): Promise<void> {
+  const supabase = await getSupabaseServer();
+  if (!supabase) return;
+
+  const { data: row } = await supabase.from("media").select("url").eq("id", id).single();
+  const url = (row as { url?: string } | null)?.url;
+  const marker = "/object/public/media/";
+  const path = url?.includes(marker) ? url.split(marker)[1] : null;
+  if (path) {
+    await supabase.storage.from("media").remove([path]);
+  }
+  const { error } = await supabase.from("media").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function createContactMessage(
+  data: Omit<ContactMessage, "id" | "created_at">
+): Promise<ContactMessage> {
+  const supabase = await getSupabaseServer();
+  if (supabase) {
+    const { data: result, error } = await supabase
+      .from("contact_messages")
+      .insert(data)
+      .select()
+      .single();
+    if (error) throw error;
+    return result as ContactMessage;
+  }
+  const message: ContactMessage = {
+    ...data,
+    id: String(Date.now()),
+    created_at: new Date().toISOString(),
+  };
+  mockContactMessages.unshift(message);
+  return message;
+}
+
+export async function getContactMessages(): Promise<ContactMessage[]> {
+  const supabase = await getSupabaseServer();
+  if (supabase) {
+    const { data } = await supabase
+      .from("contact_messages")
+      .select("*")
+      .order("created_at", { ascending: false });
+    return (data as ContactMessage[]) || [];
+  }
+  return mockContactMessages;
 }
 
 export async function createProduct(product: Partial<Product>) {

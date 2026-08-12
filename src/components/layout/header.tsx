@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Menu, X, ChevronDown, Globe, DollarSign, Sun, Moon, ShoppingCart,
+  Menu, X, ChevronDown, DollarSign, Sun, Moon, ShoppingCart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SITE, NAV_LINKS, CURRENCIES, LANGUAGES } from "@/lib/constants/site";
+import { SITE, NAV_LINKS, CURRENCIES } from "@/lib/constants/site";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/providers/app-provider";
 import { useCart } from "@/providers/cart-provider";
@@ -18,9 +18,8 @@ export function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [langOpen, setLangOpen] = useState(false);
   const [currOpen, setCurrOpen] = useState(false);
-  const { currency, language, setCurrency, setLanguage } = useApp();
+  const { currency, setCurrency } = useApp();
   const { itemCount } = useCart();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -34,7 +33,6 @@ export function Header() {
 
   useEffect(() => {
     setMobileOpen(false);
-    setLangOpen(false);
     setCurrOpen(false);
   }, [pathname]);
 
@@ -95,43 +93,7 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => { setLangOpen(!langOpen); setCurrOpen(false); }}
-                className={cn("gap-1", !scrolled && isHome && "text-white hover:text-gold hover:bg-white/10")}
-              >
-                <Globe className="h-4 w-4" />
-                {language.code.toUpperCase()}
-                <ChevronDown className={cn("h-3 w-3 transition-transform", langOpen && "rotate-180")} />
-              </Button>
-              <AnimatePresence>
-                {langOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    className="absolute right-0 top-full mt-1 w-40 rounded-lg border bg-popover p-1 shadow-lg"
-                  >
-                    {LANGUAGES.map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => { setLanguage(lang); setLangOpen(false); }}
-                        className={cn(
-                          "w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent transition-colors",
-                          language.code === lang.code && "bg-accent font-medium"
-                        )}
-                      >
-                        {lang.name}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <div className="relative">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => { setCurrOpen(!currOpen); setLangOpen(false); }}
+                onClick={() => setCurrOpen(!currOpen)}
                 className={cn("gap-1", !scrolled && isHome && "text-white hover:text-gold hover:bg-white/10")}
               >
                 <DollarSign className="h-4 w-4" />

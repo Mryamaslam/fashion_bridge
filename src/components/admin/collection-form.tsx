@@ -15,9 +15,10 @@ import type { Collection } from "@/types";
 
 interface CollectionFormProps {
   onSubmit: (data: CollectionFormData) => Promise<void>;
+  initialData?: Collection;
 }
 
-export function CollectionForm({ onSubmit }: CollectionFormProps) {
+export function CollectionForm({ onSubmit, initialData }: CollectionFormProps) {
   const {
     register,
     handleSubmit,
@@ -26,12 +27,24 @@ export function CollectionForm({ onSubmit }: CollectionFormProps) {
     formState: { errors, isSubmitting },
   } = useForm<CollectionFormData>({
     resolver: zodResolver(collectionSchema),
-    defaultValues: {
-      is_featured: false,
-      is_seasonal: false,
-      status: "draft",
-      sort_order: 0,
-    },
+    defaultValues: initialData
+      ? {
+          name: initialData.name,
+          description: initialData.description || "",
+          banner_url: initialData.banner_url || "",
+          thumbnail_url: initialData.thumbnail_url || "",
+          season: initialData.season || "",
+          is_featured: initialData.is_featured,
+          is_seasonal: initialData.is_seasonal,
+          status: initialData.status,
+          sort_order: initialData.sort_order,
+        }
+      : {
+          is_featured: false,
+          is_seasonal: false,
+          status: "draft",
+          sort_order: 0,
+        },
   });
 
   return (
@@ -52,7 +65,7 @@ export function CollectionForm({ onSubmit }: CollectionFormProps) {
         </div>
         <div className="space-y-2">
           <Label>Status</Label>
-          <Select defaultValue="draft" onValueChange={(v) => setValue("status", v as CollectionFormData["status"])}>
+          <Select defaultValue={initialData?.status || "draft"} onValueChange={(v) => setValue("status", v as CollectionFormData["status"])}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="active">Active</SelectItem>
@@ -87,7 +100,7 @@ export function CollectionForm({ onSubmit }: CollectionFormProps) {
         </div>
       </div>
       <Button type="submit" variant="gold" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? "Creating..." : "Create Collection"}
+        {isSubmitting ? "Saving..." : initialData ? "Save Changes" : "Create Collection"}
       </Button>
     </form>
   );

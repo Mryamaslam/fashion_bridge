@@ -7,58 +7,53 @@ import { AdminHeader } from "@/components/admin/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { SafeImage } from "@/components/shared/safe-image";
+import { useMedia, useMediaMutations } from "@/hooks/use-data";
 
-interface MediaItem {
-  id: string;
-  name: string;
-  folder: string;
-  size: string;
-  url?: string;
+function formatSize(bytes: number) {
+  return bytes > 1024 * 1024
+    ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+    : `${Math.round(bytes / 1024)} KB`;
 }
 
-const initialMedia: MediaItem[] = [
-  { id: "1", name: "hero-banner-1.jpg", folder: "banners", size: "2.4 MB" },
-  { id: "2", name: "product-tee-black.jpg", folder: "products", size: "890 KB" },
-  { id: "3", name: "collection-summer.jpg", folder: "collections", size: "1.2 MB" },
-  { id: "4", name: "logo-fbi.png", folder: "branding", size: "156 KB" },
-];
-
 export default function AdminMediaPage() {
-  const [media, setMedia] = useState<MediaItem[]>(initialMedia);
+  const { data: media, isLoading } = useMedia();
+  const { upload, remove } = useMediaMutations();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const filtered = media.filter(
+  const filtered = (media || []).filter(
     (m) =>
       m.name.toLowerCase().includes(search.toLowerCase()) ||
       m.folder.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
 
-    const newItems: MediaItem[] = Array.from(files).map((file) => ({
-      id: String(Date.now() + Math.random()),
-      name: file.name,
-      folder: "uploads",
-      size: file.size > 1024 * 1024
-        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
-        : `${Math.round(file.size / 1024)} KB`,
-      url: URL.createObjectURL(file),
-    }));
-
-    setMedia((prev) => [...newItems, ...prev]);
-    toast.success(`${newItems.length} file(s) uploaded`);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    try {
+      await Promise.all(
+        Array.from(files).map((file) => upload.mutateAsync({ file, folder: "uploads" }))
+      );
+      toast.success(`${files.length} file(s) uploaded`);
+    } catch {
+      toast.error("Upload failed");
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setMedia((prev) => prev.filter((m) => m.id !== id));
-    if (selected === id) setSelected(null);
-    toast.success("File removed");
+  const handleDelete = async (id: string) => {
+    try {
+      await remove.mutateAsync(id);
+      if (selected === id) setSelected(null);
+      toast.success("File removed");
+    } catch {
+      toast.error("Failed to remove file");
+    }
   };
 
   return (
@@ -84,13 +79,22 @@ export default function AdminMediaPage() {
               className="hidden"
               onChange={handleUpload}
             />
-            <Button variant="gold" size="sm" onClick={() => fileInputRef.current?.click()}>
-              <Upload className="mr-2 h-4 w-4" /> Upload Images
+            <Button
+              variant="gold"
+              size="sm"
+              disabled={upload.isPending}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="mr-2 h-4 w-4" /> {upload.isPending ? "Uploading..." : "Upload Images"}
             </Button>
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {filtered.map((item) => (
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="aspect-square rounded-xl" />
+            ))
+          ) : filtered.map((item) => (
             <Card
               key={item.id}
               className={`overflow-hidden transition-shadow cursor-pointer ${selected === item.id ? "ring-2 ring-gold" : "hover:shadow-md"}`}
@@ -106,7 +110,7 @@ export default function AdminMediaPage() {
               <CardContent className="p-3">
                 <p className="text-sm font-medium truncate">{item.name}</p>
                 <div className="flex items-center justify-between mt-1">
-                  <p className="text-xs text-muted-foreground">{item.folder} · {item.size}</p>
+                  <p className="text-xs text-muted-foreground">{item.folder} · {formatSize(item.size_bytes)}</p>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -121,7 +125,7 @@ export default function AdminMediaPage() {
             </Card>
           ))}
         </div>
-        {filtered.length === 0 && (
+        {!isLoading && filtered.length === 0 && (
           <p className="text-center text-muted-foreground py-12">No media files found.</p>
         )}
       </div>

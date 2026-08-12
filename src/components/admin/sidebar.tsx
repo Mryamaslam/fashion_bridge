@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Package, Layers, MessageSquare, ShoppingCart,
-  BarChart3, Image, Settings, LogOut, Menu, X, ChevronLeft,
+  BarChart3, Image, Settings, LogOut, Menu, X, ChevronLeft, Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ const navItems = [
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/collections", label: "Collections", icon: Layers },
   { href: "/admin/inquiries", label: "Inquiries", icon: MessageSquare },
+  { href: "/admin/contact", label: "Messages", icon: Mail },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/media", label: "Media Library", icon: Image },

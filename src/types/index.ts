@@ -132,6 +132,15 @@ export interface OrderItem {
   color: string | null;
 }
 
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  created_at: string;
+}
+
 export interface Country {
   id: string;
   name: string;

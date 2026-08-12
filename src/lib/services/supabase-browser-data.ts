@@ -3,9 +3,14 @@ import { filterProducts, paginate } from "@/lib/services/product-filters";
 import type {
   Category,
   Collection,
+  ContactMessage,
   DashboardStats,
   Inquiry,
   InquiryStatus,
+  Media,
+  Order,
+  OrderItem,
+  OrderStatus,
   Product,
   ProductFilters,
   PaginatedResponse,
@@ -158,6 +163,119 @@ export async function patchInquiry(
     .single();
   if (error) throw error;
   return result as Inquiry;
+}
+
+export async function insertCollection(data: Partial<Collection>): Promise<Collection> {
+  const { data: result, error } = await db().from("collections").insert(data).select().single();
+  if (error) throw error;
+  return result as Collection;
+}
+
+export async function patchCollection(id: string, data: Partial<Collection>): Promise<Collection> {
+  const { data: result, error } = await db()
+    .from("collections")
+    .update({ ...data, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return result as Collection;
+}
+
+export async function removeCollection(id: string): Promise<void> {
+  const { error } = await db().from("collections").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function fetchOrders(): Promise<Order[]> {
+  const { data, error } = await db()
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data as Order[]) || [];
+}
+
+export async function fetchOrderItems(): Promise<OrderItem[]> {
+  const { data, error } = await db().from("order_items").select("*");
+  if (error) throw error;
+  return (data as OrderItem[]) || [];
+}
+
+export async function patchOrder(
+  id: string,
+  updates: { status?: OrderStatus; tracking_number?: string | null; notes?: string | null }
+): Promise<Order> {
+  const { data: result, error } = await db()
+    .from("orders")
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return result as Order;
+}
+
+export async function fetchMedia(): Promise<Media[]> {
+  const { data, error } = await db().from("media").select("*").order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data as Media[]) || [];
+}
+
+export async function uploadMedia(file: File, folder = "general"): Promise<Media> {
+  const path = `${folder}/${Date.now()}-${file.name}`;
+  const { error: uploadError } = await db()
+    .storage.from("media")
+    .upload(path, file, { contentType: file.type || "application/octet-stream" });
+  if (uploadError) throw uploadError;
+
+  const { data: pub } = db().storage.from("media").getPublicUrl(path);
+  const { data, error } = await db()
+    .from("media")
+    .insert({
+      name: file.name,
+      url: pub.publicUrl,
+      folder,
+      mime_type: file.type || "application/octet-stream",
+      size_bytes: file.size,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Media;
+}
+
+export async function removeMedia(id: string): Promise<void> {
+  const { data: row } = await db().from("media").select("url").eq("id", id).single();
+  const url = (row as { url?: string } | null)?.url;
+  const marker = "/object/public/media/";
+  const path = url?.includes(marker) ? url.split(marker)[1] : null;
+  if (path) {
+    await db().storage.from("media").remove([path]);
+  }
+  const { error } = await db().from("media").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function fetchContactMessages(): Promise<ContactMessage[]> {
+  const { data, error } = await db()
+    .from("contact_messages")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data as ContactMessage[]) || [];
+}
+
+export async function insertContactMessage(
+  data: Record<string, unknown>
+): Promise<ContactMessage> {
+  const { data: result, error } = await db()
+    .from("contact_messages")
+    .insert(data)
+    .select()
+    .single();
+  if (error) throw error;
+  return result as ContactMessage;
 }
 
 export async function fetchProductSlugs(): Promise<string[]> {

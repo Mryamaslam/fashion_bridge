@@ -1,8 +1,10 @@
 import type {
   Category,
   Collection,
+  ContactMessage,
   DashboardStats,
   Inquiry,
+  Media,
   Order,
   OrderItem,
   Product,
@@ -55,6 +57,11 @@ export const mockOrders: Order[] = [
 
 export const mockOrderItems: OrderItem[] = [];
 
+export const mockContactMessages: ContactMessage[] = [];
+
+/** Demo-mode only: uploads live only for the current browser tab (no backing Storage). */
+export const mockMedia: Media[] = [];
+
 export const mockDashboardStats: DashboardStats = {
   totalProducts: mockProducts.length,
   totalCollections: mockCollections.length,
@@ -66,22 +73,3 @@ export const mockDashboardStats: DashboardStats = {
   pendingInquiries: mockInquiries.filter((i) => i.status === "new").length,
 };
 
-export const revenueChartData = [
-  { month: "Jan", revenue: 12000, orders: 8 },
-  { month: "Feb", revenue: 18500, orders: 12 },
-  { month: "Mar", revenue: 15200, orders: 10 },
-  { month: "Apr", revenue: 22100, orders: 15 },
-  { month: "May", revenue: 28750, orders: 18 },
-  { month: "Jun", revenue: 19500, orders: 14 },
-];
-
-export const topProductsData = [
-  { name: "Cotton Tee", sales: 4500 },
-  { name: "Midweight Hoodie", sales: 3600 },
-  { name: "Running Shoes", sales: 3400 },
-  { name: "Polo Shirt", sales: 3200 },
-  { name: "Zip Fleece Hoodie", sales: 3100 },
-  { name: "Athletic Shorts", sales: 2900 },
-  { name: "Street Sneakers", sales: 2600 },
-  { name: "Slim Jeans", sales: 2100 },
-];

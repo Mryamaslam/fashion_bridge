@@ -139,19 +139,12 @@ export const COLORS = [
   "Gold",
 ] as const;
 
+/** rate = units of this currency per 1 USD. Static reference rates — update periodically. */
 export const CURRENCIES = [
-  { code: "USD", symbol: "$", name: "US Dollar" },
-  { code: "EUR", symbol: "€", name: "Euro" },
-  { code: "GBP", symbol: "£", name: "British Pound" },
-  { code: "AED", symbol: "د.إ", name: "UAE Dirham" },
-] as const;
-
-export const LANGUAGES = [
-  { code: "en", name: "English" },
-  { code: "es", name: "Español" },
-  { code: "fr", name: "Français" },
-  { code: "ar", name: "العربية" },
-  { code: "zh", name: "中文" },
+  { code: "USD", symbol: "$", name: "US Dollar", rate: 1 },
+  { code: "EUR", symbol: "€", name: "Euro", rate: 0.92 },
+  { code: "GBP", symbol: "£", name: "British Pound", rate: 0.79 },
+  { code: "AED", symbol: "د.إ", name: "UAE Dirham", rate: 3.67 },
 ] as const;
 
 export const EXPORT_COUNTRIES = [

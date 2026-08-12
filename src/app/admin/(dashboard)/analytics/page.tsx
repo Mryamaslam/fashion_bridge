@@ -6,11 +6,17 @@ import {
 } from "recharts";
 import { AdminHeader } from "@/components/admin/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { revenueChartData, topProductsData } from "@/lib/data/mock";
+import { useAdminOrders, useOrderItems } from "@/hooks/use-data";
+import { buildRevenueSeries, buildTopProducts } from "@/lib/utils/analytics";
 
 const COLORS = ["#c9a227", "#e8d48b", "#9a7b1a", "#0a0a0a", "#737373"];
 
 export default function AdminAnalyticsPage() {
+  const { data: orders } = useAdminOrders();
+  const { data: orderItems } = useOrderItems();
+  const revenueSeries = buildRevenueSeries(orders || []);
+  const topProducts = buildTopProducts(orderItems || []);
+
   return (
     <>
       <AdminHeader title="Analytics & Reports" />
@@ -20,7 +26,7 @@ export default function AdminAnalyticsPage() {
             <CardHeader><CardTitle>Revenue Trend</CardTitle></CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={revenueChartData}>
+                <BarChart data={revenueSeries}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
@@ -33,16 +39,22 @@ export default function AdminAnalyticsPage() {
           <Card>
             <CardHeader><CardTitle>Top Products</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie data={topProductsData} dataKey="sales" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
-                    {topProductsData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              {topProducts.length ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie data={topProducts} dataKey="sales" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
+                      {topProducts.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="py-24 text-center text-muted-foreground">
+                  No order data yet — this fills in as orders are placed.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
