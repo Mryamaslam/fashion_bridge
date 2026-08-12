@@ -1,7 +1,10 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { Upload, X, Link as LinkIcon, Film } from "lucide-react";
 import { productSchema, type ProductFormData } from "@/lib/validations/schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +13,11 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { SafeImage } from "@/components/shared/safe-image";
 import { COLORS, SIZES } from "@/lib/constants/site";
 import { useCategories, useAdminCollections } from "@/hooks/use-data";
 import { generateSKU } from "@/lib/utils";
+import { uploadClientMedia } from "@/lib/services/client-data";
 import type { Product } from "@/types";
 
 interface ProductFormProps {
@@ -46,6 +51,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
       stock_quantity: product.stock_quantity,
       low_stock_threshold: product.low_stock_threshold,
       images: product.images,
+      video_url: product.video_url || "",
       status: product.status,
       is_featured: product.is_featured,
     } : {
@@ -56,6 +62,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
       sizes: [],
       colors: [],
       images: [],
+      video_url: "",
       status: "active",
       is_featured: false,
       price: 0,
@@ -65,6 +72,14 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
 
   const selectedColors = watch("colors") || [];
   const selectedSizes = watch("sizes") || [];
+  const images = watch("images") || [];
+  const videoUrl = watch("video_url") || "";
+
+  const [imageUrlInput, setImageUrlInput] = useState("");
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const imageFileRef = useRef<HTMLInputElement>(null);
+  const videoFileRef = useRef<HTMLInputElement>(null);
 
   const toggleArrayItem = (field: "colors" | "sizes", value: string) => {
     const current = watch(field) || [];
@@ -72,6 +87,51 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
       ? current.filter((v) => v !== value)
       : [...current, value];
     setValue(field, updated);
+  };
+
+  const handleAddImageUrl = () => {
+    const url = imageUrlInput.trim();
+    if (!url) return;
+    setValue("images", [...images, url]);
+    setImageUrlInput("");
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setValue("images", images.filter((_, i) => i !== index));
+  };
+
+  const handleUploadImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+    setUploadingImages(true);
+    try {
+      const uploaded = await Promise.all(
+        Array.from(files).map((file) => uploadClientMedia(file, "products"))
+      );
+      setValue("images", [...images, ...uploaded.map((m) => m.url)]);
+      toast.success(`${uploaded.length} image(s) uploaded`);
+    } catch {
+      toast.error("Image upload failed");
+    } finally {
+      setUploadingImages(false);
+      if (imageFileRef.current) imageFileRef.current.value = "";
+    }
+  };
+
+  const handleUploadVideo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingVideo(true);
+    try {
+      const uploaded = await uploadClientMedia(file, "products");
+      setValue("video_url", uploaded.url);
+      toast.success("Video uploaded");
+    } catch {
+      toast.error("Video upload failed");
+    } finally {
+      setUploadingVideo(false);
+      if (videoFileRef.current) videoFileRef.current.value = "";
+    }
   };
 
   return (
@@ -143,13 +203,100 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
           <Label>Material</Label>
           <Input {...register("material")} />
         </div>
-        <div className="space-y-2">
-          <Label>Image URL</Label>
-          <Input {...register("images.0")} placeholder="https://..." />
-        </div>
         <div className="space-y-2 md:col-span-2">
           <Label>Description</Label>
           <Textarea {...register("description")} rows={3} />
+        </div>
+        <div className="space-y-3 md:col-span-2">
+          <Label>Product Images</Label>
+          {images.length > 0 && (
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+              {images.map((url, i) => (
+                <div key={`${url}-${i}`} className="relative aspect-square overflow-hidden rounded-lg border bg-muted">
+                  <SafeImage src={url} alt={`Image ${i + 1}`} fill className="object-cover" sizes="120px" />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(i)}
+                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+                    aria-label="Remove image"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={imageFileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleUploadImages}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={uploadingImages}
+              onClick={() => imageFileRef.current?.click()}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              {uploadingImages ? "Uploading..." : "Upload from device"}
+            </Button>
+            <div className="flex items-center gap-2">
+              <Input
+                value={imageUrlInput}
+                onChange={(e) => setImageUrlInput(e.target.value)}
+                placeholder="Or paste an image URL..."
+                className="h-9 w-56"
+              />
+              <Button type="button" variant="outline" size="sm" onClick={handleAddImageUrl}>
+                <LinkIcon className="mr-2 h-4 w-4" /> Add
+              </Button>
+            </div>
+          </div>
+        </div>
+        <div className="space-y-3 md:col-span-2">
+          <Label>Product Video</Label>
+          {videoUrl && (
+            <div className="relative max-w-sm">
+              <video src={videoUrl} controls className="w-full rounded-lg border" />
+              <button
+                type="button"
+                onClick={() => setValue("video_url", "")}
+                className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+                aria-label="Remove video"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={videoFileRef}
+              type="file"
+              accept="video/*"
+              className="hidden"
+              onChange={handleUploadVideo}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={uploadingVideo}
+              onClick={() => videoFileRef.current?.click()}
+            >
+              <Film className="mr-2 h-4 w-4" />
+              {uploadingVideo ? "Uploading..." : "Upload from device"}
+            </Button>
+            <Input
+              {...register("video_url")}
+              placeholder="Or paste a video URL..."
+              className="h-9 w-56"
+            />
+          </div>
         </div>
         <div className="space-y-2 md:col-span-2">
           <Label>Colors</Label>

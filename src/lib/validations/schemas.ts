@@ -37,6 +37,7 @@ export const productSchema = z.object({
   stock_quantity: z.number().min(0),
   low_stock_threshold: z.number().min(0),
   images: z.array(z.string()),
+  video_url: z.string().optional(),
   status: z.enum(["active", "draft", "archived"]),
   is_featured: z.boolean(),
 });

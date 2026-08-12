@@ -65,6 +65,7 @@ export interface Product {
   stock_quantity: number;
   low_stock_threshold: number;
   images: string[];
+  video_url: string | null;
   status: ProductStatus;
   is_featured: boolean;
   created_at: string;

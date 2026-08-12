@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import type { Metadata } from "next";
 import { getCollectionBySlug, getProductsByCollection, getCategoryName, getCategories } from "@/lib/services/data";
 import { FadeIn } from "@/components/animations/motion";
@@ -33,6 +34,10 @@ export default async function CollectionDetailPage({ params }: Props) {
   if (IS_STATIC_EXPORT) {
     return <CollectionDetailClient slug={slug} />;
   }
+
+  // Admin edits must show up immediately — excludes this page from static
+  // prerendering/caching for known slugs.
+  await connection();
 
   const collection = await getCollectionBySlug(slug);
   if (!collection) notFound();

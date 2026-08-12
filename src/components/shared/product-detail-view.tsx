@@ -25,9 +25,17 @@ export function ProductDetailView({ product, categoryName }: ProductDetailViewPr
 
   const [selectedColor, setSelectedColor] = useState(colorPresentations[0]?.color ?? "");
   const [selectedSize, setSelectedSize] = useState(product.sizes[0] ?? "");
+  const [activeImage, setActiveImage] = useState<string | null>(null);
 
   const activePresentation =
     colorPresentations.find((c) => c.color === selectedColor) ?? colorPresentations[0];
+
+  const galleryImages = (product.images || []).filter((url) => /^https?:\/\//i.test(url));
+
+  const selectColor = (color: string) => {
+    setSelectedColor(color);
+    setActiveImage(null);
+  };
 
   const isOutOfStock = product.stock_quantity === 0;
   const isLowStock =
@@ -65,7 +73,7 @@ export function ProductDetailView({ product, categoryName }: ProductDetailViewPr
         <div>
           <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-muted">
             <SafeImage
-              src={activePresentation?.image}
+              src={activeImage || activePresentation?.image}
               alt={`${product.name} — ${selectedColor}`}
               fill
               className="object-cover"
@@ -93,10 +101,10 @@ export function ProductDetailView({ product, categoryName }: ProductDetailViewPr
                 <button
                   key={color}
                   type="button"
-                  onClick={() => setSelectedColor(color)}
+                  onClick={() => selectColor(color)}
                   className={cn(
                     "relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border-2 transition-all",
-                    selectedColor === color
+                    !activeImage && selectedColor === color
                       ? "border-gold ring-2 ring-gold/30"
                       : "border-transparent opacity-70 hover:opacity-100"
                   )}
@@ -111,6 +119,39 @@ export function ProductDetailView({ product, categoryName }: ProductDetailViewPr
                   />
                 </button>
               ))}
+            </div>
+          )}
+
+          {/* Additional product photos uploaded in admin */}
+          {galleryImages.length > 0 && (
+            <div className="mt-4">
+              <p className="mb-2 text-sm font-medium text-muted-foreground">More Photos</p>
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {galleryImages.map((image, i) => (
+                  <button
+                    key={`${image}-${i}`}
+                    type="button"
+                    onClick={() => setActiveImage(image)}
+                    className={cn(
+                      "relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border-2 transition-all",
+                      activeImage === image
+                        ? "border-gold ring-2 ring-gold/30"
+                        : "border-transparent opacity-70 hover:opacity-100"
+                    )}
+                    aria-label={`View photo ${i + 1}`}
+                  >
+                    <SafeImage src={image} alt={`${product.name} — photo ${i + 1}`} fill className="object-cover" sizes="80px" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Product video */}
+          {product.video_url && (
+            <div className="mt-6">
+              <p className="mb-2 text-sm font-medium text-muted-foreground">Product Video</p>
+              <video src={product.video_url} controls className="w-full rounded-xl border" />
             </div>
           )}
         </div>
@@ -161,7 +202,7 @@ export function ProductDetailView({ product, categoryName }: ProductDetailViewPr
                   <button
                     key={color}
                     type="button"
-                    onClick={() => setSelectedColor(color)}
+                    onClick={() => selectColor(color)}
                     className={cn(
                       "flex h-10 items-center gap-2 rounded-full border px-3 text-sm transition-all",
                       selectedColor === color
@@ -240,7 +281,7 @@ export function ProductDetailView({ product, categoryName }: ProductDetailViewPr
                 key={color}
                 type="button"
                 onClick={() => {
-                  setSelectedColor(color);
+                  selectColor(color);
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
                 className={cn(

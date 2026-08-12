@@ -618,6 +618,7 @@ export function generateCatalogProducts(): Product[] {
         stock_quantity: intRange(cat.stockRange[0], cat.stockRange[1], i, 30),
         low_stock_threshold: intRange(cat.lowStockRange[0], cat.lowStockRange[1], i, 30),
         images,
+        video_url: null,
         status: "active",
         is_featured: i < 3,
         created_at: `2024-${String((i % 12) + 1).padStart(2, "0")}-${String((i % 28) + 1).padStart(2, "0")}`,

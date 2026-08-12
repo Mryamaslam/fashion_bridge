@@ -10,6 +10,11 @@ const moves = [
 ];
 
 function copyRecursive(src, dest) {
+  if (fs.statSync(src).isFile()) {
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.copyFileSync(src, dest);
+    return;
+  }
   fs.mkdirSync(dest, { recursive: true });
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
     const srcPath = path.join(src, entry.name);

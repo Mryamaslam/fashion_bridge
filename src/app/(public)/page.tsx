@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import {
   ArrowRight, Award, Globe, Factory, Package, Ship,
   Tag, Settings, Headphones, DollarSign, Clock,
@@ -32,6 +33,10 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 const heroSlides = IMAGES.hero;
 
 export default async function HomePage() {
+  // Admin edits (new/updated featured products, collections) must show up
+  // immediately — excludes this page from static prerendering/caching.
+  if (!IS_STATIC_EXPORT) await connection();
+
   const featuredProducts = IS_STATIC_EXPORT ? [] : await getFeaturedProducts(4);
   const collections = IS_STATIC_EXPORT ? [] : await getCollections();
   const featuredCollections = collections.slice(0, 3);

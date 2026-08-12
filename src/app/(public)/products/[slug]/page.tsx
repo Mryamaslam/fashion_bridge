@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import type { Metadata } from "next";
 import { getProductBySlug, getCategoryName, getCategories } from "@/lib/services/data";
 import { ProductDetailView } from "@/components/shared/product-detail-view";
@@ -36,6 +37,10 @@ export default async function ProductDetailPage({ params }: Props) {
   if (IS_STATIC_EXPORT) {
     return <ProductDetailClient slug={slug} />;
   }
+
+  // Admin edits (price, images, stock, etc.) must show up immediately —
+  // this excludes the page from static prerendering/caching for known slugs.
+  await connection();
 
   const product = await getProductBySlug(slug);
   if (!product || product.status !== "active") notFound();
