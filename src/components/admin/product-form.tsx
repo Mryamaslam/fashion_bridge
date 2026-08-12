@@ -134,8 +134,16 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
     }
   };
 
+  // video_url is a newer column — older/unmigrated databases reject the whole
+  // update if it's present at all, so omit it unless actually set.
+  const handleFormSubmit = (data: ProductFormData) => {
+    const cleaned = { ...data };
+    if (!cleaned.video_url) delete cleaned.video_url;
+    return onSubmit(cleaned);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2 md:col-span-2">
           <Label>Product Name *</Label>

@@ -30,7 +30,11 @@ export function ProductDetailView({ product, categoryName }: ProductDetailViewPr
   const activePresentation =
     colorPresentations.find((c) => c.color === selectedColor) ?? colorPresentations[0];
 
-  const galleryImages = (product.images || []).filter((url) => /^https?:\/\//i.test(url));
+  // Extra photos beyond the one already shown as the main image.
+  const mainImage = activePresentation?.image;
+  const galleryImages = (product.images || []).filter(
+    (url) => /^https?:\/\//i.test(url) && url !== mainImage
+  );
 
   const selectColor = (color: string) => {
     setSelectedColor(color);
