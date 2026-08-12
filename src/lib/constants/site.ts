@@ -145,6 +145,7 @@ export const CURRENCIES = [
   { code: "EUR", symbol: "€", name: "Euro", rate: 0.92 },
   { code: "GBP", symbol: "£", name: "British Pound", rate: 0.79 },
   { code: "AED", symbol: "د.إ", name: "UAE Dirham", rate: 3.67 },
+  { code: "PKR", symbol: "₨", name: "Pakistani Rupee", rate: 280 },
 ] as const;
 
 export const EXPORT_COUNTRIES = [
