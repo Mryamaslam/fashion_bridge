@@ -7,6 +7,7 @@
 const local = (file: string) => `/images/products/${file}`;
 const localCat = (file: string) => `/images/categories/${file}`;
 const localHero = (file: string) => `/images/products/${file}`;
+const localHeroPhoto = (file: string) => `/images/hero/${file}`;
 
 /** Local blank wholesale catalog images — product cards use these only */
 const L = {
@@ -61,9 +62,9 @@ const L = {
 } as const;
 
 const PHOTOS = {
-  heroFashion: localHero("tee-stack-basics.png"),
-  heroWholesale: localHero("hoodie-grey-flat.png"),
-  heroManufacturing: localHero("jeans-blue-stack.png"),
+  heroFashion: localHeroPhoto("global-export-port.jpg"),
+  heroWholesale: localHeroPhoto("wholesale-apparel-rack.jpg"),
+  heroManufacturing: localHeroPhoto("quality-manufacturing.jpg"),
   heroCatalog: localHero("polo-navy-folded.png"),
   summerCollection: localHero("tee-white-flat.png"),
   winterCollection: localHero("hoodie-black-pullover.png"),
@@ -71,8 +72,8 @@ const PHOTOS = {
   streetwearCollection: localHero("tee-black-flat.png"),
   denimCollection: localHero("jeans-dark-wash.png"),
   footwearCollection: localHero("shoes-black-lifestyle.png"),
-  aboutManufacturing: localHero("tee-stack-basics.png"),
-  aboutFactory: localHero("hoodie-black-zip.png"),
+  aboutManufacturing: localHeroPhoto("quality-manufacturing.jpg"),
+  aboutFactory: localHeroPhoto("wholesale-apparel-rack.jpg"),
 } as const;
 
 export const IMAGES = {
