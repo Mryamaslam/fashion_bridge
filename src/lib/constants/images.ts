@@ -62,9 +62,9 @@ const L = {
 } as const;
 
 const PHOTOS = {
-  heroFashion: localHeroPhoto("polo-portrait.jpg"),
-  heroWholesale: localHeroPhoto("streetwear-duo.jpg"),
-  heroManufacturing: localHeroPhoto("denim-couple.jpg"),
+  heroFashion: localHeroPhoto("smart-casual-trio.jpg"),
+  heroWholesale: localHeroPhoto("wholesale-group.jpg"),
+  heroManufacturing: localHeroPhoto("denim-couple-landscape.jpg"),
   heroCatalog: localHero("polo-navy-folded.png"),
   summerCollection: localHero("tee-white-flat.png"),
   winterCollection: localHero("hoodie-black-pullover.png"),
