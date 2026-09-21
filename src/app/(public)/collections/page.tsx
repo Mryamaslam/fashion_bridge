@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { FadeIn } from "@/components/animations/motion";
 import { CTASection } from "@/components/shared/cta-section";
 import { CollectionsPageContent } from "@/components/shared/collections-page-content";
@@ -14,6 +15,11 @@ export const metadata: Metadata = {
 };
 
 export default async function CollectionsPage() {
+  // Admin edits (new/updated collections) must show up immediately — excludes
+  // this page from static prerendering/caching, and avoids hitting the
+  // database at build time.
+  if (!IS_STATIC_EXPORT) await connection();
+
   const collections = IS_STATIC_EXPORT ? [] : await getCollections();
 
   return (
