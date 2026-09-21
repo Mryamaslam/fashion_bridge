@@ -62,9 +62,9 @@ const L = {
 } as const;
 
 const PHOTOS = {
-  heroFashion: localHeroPhoto("global-export-port.jpg"),
-  heroWholesale: localHeroPhoto("wholesale-apparel-rack.jpg"),
-  heroManufacturing: localHeroPhoto("quality-manufacturing.jpg"),
+  heroFashion: localHeroPhoto("polo-portrait.jpg"),
+  heroWholesale: localHeroPhoto("streetwear-duo.jpg"),
+  heroManufacturing: localHeroPhoto("denim-couple.jpg"),
   heroCatalog: localHero("polo-navy-folded.png"),
   summerCollection: localHero("tee-white-flat.png"),
   winterCollection: localHero("hoodie-black-pullover.png"),
@@ -80,7 +80,7 @@ export const IMAGES = {
   hero: [
     { image: PHOTOS.heroFashion, title: "Premium Fashion Export" },
     { image: PHOTOS.heroWholesale, title: "Wholesale Apparel Worldwide" },
-    { image: PHOTOS.heroManufacturing, title: "Quality Manufacturing" },
+    { image: PHOTOS.heroManufacturing, title: "Style for Every Market" },
   ],
   heroCatalog: PHOTOS.heroCatalog,
   about: {
