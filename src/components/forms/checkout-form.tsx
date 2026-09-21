@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Banknote } from "lucide-react";
 import { useCart } from "@/providers/cart-provider";
 import { EXPORT_COUNTRIES } from "@/lib/constants/site";
 import { IS_STATIC_EXPORT } from "@/lib/constants/static-export";
@@ -53,6 +54,7 @@ export function CheckoutForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
+          payment_method: "Cash on Delivery",
           items: items.map((i) => ({
             productId: i.productId,
             quantity: i.quantity,
@@ -134,6 +136,13 @@ export function CheckoutForm() {
           value={form.shipping_address}
           onChange={(e) => setForm({ ...form, shipping_address: e.target.value })}
         />
+      </div>
+      <div>
+        <Label>Payment Method</Label>
+        <div className="mt-1.5 flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-2 text-sm">
+          <Banknote className="h-4 w-4 text-gold" />
+          Cash on Delivery
+        </div>
       </div>
       <Button type="submit" variant="gold" className="w-full" disabled={loading}>
         {loading ? "Placing order…" : "Confirm order & deduct stock"}

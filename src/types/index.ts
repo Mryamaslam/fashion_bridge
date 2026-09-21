@@ -112,6 +112,7 @@ export interface Order {
   status: OrderStatus;
   total_amount: number;
   currency: string;
+  payment_method: string;
   shipping_address: string | null;
   tracking_number: string | null;
   notes: string | null;

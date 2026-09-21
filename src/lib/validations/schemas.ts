@@ -79,6 +79,7 @@ export const orderSchema = z.object({
   buyer_company: z.string().optional(),
   shipping_address: z.string().optional(),
   currency: z.string().default("USD"),
+  payment_method: z.literal("Cash on Delivery").default("Cash on Delivery"),
   items: z.array(orderItemSchema).min(1, "Cart is empty"),
 });
 

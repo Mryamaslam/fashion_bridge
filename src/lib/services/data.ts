@@ -112,6 +112,7 @@ export interface CreateOrderInput {
   buyer_company?: string | null;
   shipping_address?: string | null;
   currency?: string;
+  payment_method?: string;
   items: { productId: string; quantity: number; color?: string; size?: string }[];
 }
 
@@ -166,6 +167,7 @@ export async function createOrderFromCart(input: CreateOrderInput): Promise<Orde
       status: "pending" as const,
       total_amount: total,
       currency: input.currency ?? "USD",
+      payment_method: input.payment_method ?? "Cash on Delivery",
       shipping_address: input.shipping_address ?? null,
       tracking_number: null as string | null,
       notes: null as string | null,
@@ -198,6 +200,7 @@ export async function createOrderFromCart(input: CreateOrderInput): Promise<Orde
     status: "pending",
     total_amount: total,
     currency: input.currency ?? "USD",
+    payment_method: input.payment_method ?? "Cash on Delivery",
     shipping_address: input.shipping_address ?? null,
     tracking_number: null,
     notes: null,

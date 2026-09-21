@@ -13,6 +13,7 @@ export async function POST(request: Request) {
       buyer_company: parsed.buyer_company,
       shipping_address: parsed.shipping_address,
       currency: parsed.currency,
+      payment_method: parsed.payment_method,
       items: parsed.items,
     });
     return NextResponse.json(order, { status: 201 });

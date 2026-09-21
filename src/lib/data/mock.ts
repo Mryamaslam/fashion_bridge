@@ -50,9 +50,9 @@ export const mockInquiries: Inquiry[] = [
 ];
 
 export const mockOrders: Order[] = [
-  { id: "1", order_number: "FBI-ORD-2024-001", buyer_name: "James Mitchell", buyer_company: "Urban Style Co.", buyer_email: "james@urbanstyle.co.uk", buyer_country: "United Kingdom", status: "shipped", total_amount: 4250.00, currency: "USD", shipping_address: "London, UK", tracking_number: "TRK123456789", notes: null, created_at: "2024-05-20", updated_at: "2024-06-01" },
-  { id: "2", order_number: "FBI-ORD-2024-002", buyer_name: "Sarah Chen", buyer_company: "Pacific Retail", buyer_email: "sarah@pacificretail.au", buyer_country: "Australia", status: "processing", total_amount: 8900.00, currency: "USD", shipping_address: "Sydney, Australia", tracking_number: null, notes: "Priority order", created_at: "2024-06-01", updated_at: "2024-06-05" },
-  { id: "3", order_number: "FBI-ORD-2024-003", buyer_name: "Pierre Dubois", buyer_company: "Paris Fashion House", buyer_email: "pierre@pfh.fr", buyer_country: "France", status: "confirmed", total_amount: 15600.00, currency: "EUR", shipping_address: "Paris, France", tracking_number: null, notes: null, created_at: "2024-06-08", updated_at: "2024-06-08" },
+  { id: "1", order_number: "FBI-ORD-2024-001", buyer_name: "James Mitchell", buyer_company: "Urban Style Co.", buyer_email: "james@urbanstyle.co.uk", buyer_country: "United Kingdom", status: "shipped", total_amount: 4250.00, currency: "USD", payment_method: "Cash on Delivery", shipping_address: "London, UK", tracking_number: "TRK123456789", notes: null, created_at: "2024-05-20", updated_at: "2024-06-01" },
+  { id: "2", order_number: "FBI-ORD-2024-002", buyer_name: "Sarah Chen", buyer_company: "Pacific Retail", buyer_email: "sarah@pacificretail.au", buyer_country: "Australia", status: "processing", total_amount: 8900.00, currency: "USD", payment_method: "Cash on Delivery", shipping_address: "Sydney, Australia", tracking_number: null, notes: "Priority order", created_at: "2024-06-01", updated_at: "2024-06-05" },
+  { id: "3", order_number: "FBI-ORD-2024-003", buyer_name: "Pierre Dubois", buyer_company: "Paris Fashion House", buyer_email: "pierre@pfh.fr", buyer_country: "France", status: "confirmed", total_amount: 15600.00, currency: "EUR", payment_method: "Cash on Delivery", shipping_address: "Paris, France", tracking_number: null, notes: null, created_at: "2024-06-08", updated_at: "2024-06-08" },
 ];
 
 export const mockOrderItems: OrderItem[] = [];
