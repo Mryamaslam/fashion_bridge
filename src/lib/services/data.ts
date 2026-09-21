@@ -1,4 +1,6 @@
-import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { getDb } from "@/lib/mongodb/client";
+import { serialize, serializeAll, toObjectId } from "@/lib/mongodb/serialize";
+import { deleteFromCloudinary } from "@/lib/cloudinary/upload";
 import {
   mockProducts,
   mockCollections,
@@ -25,18 +27,12 @@ import type {
   PaginatedResponse,
 } from "@/types";
 
-async function getSupabaseServer() {
-  if (!isSupabaseConfigured()) return null;
-  const { createClient } = await import("@/lib/supabase/server");
-  return createClient();
-}
-
 export async function getProducts(
   filters: ProductFilters = {},
   page = 1,
   pageSize = 24
 ): Promise<PaginatedResponse<Product>> {
-  // Public catalog always reads the same inventory as admin (Supabase or in-memory mock).
+  // Public catalog always reads the same inventory as admin (Mongo or in-memory mock).
   const [all, categories, collections] = await Promise.all([
     getAllProducts(),
     getCategories(),
@@ -50,19 +46,19 @@ export async function getProducts(
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data } = await supabase.from("products").select("*").eq("slug", slug).single();
-    return data as Product | null;
+  const db = await getDb();
+  if (db) {
+    const doc = await db.collection("products").findOne({ slug });
+    return doc ? (serialize(doc) as unknown as Product) : null;
   }
   return mockProducts.find((p) => p.slug === slug) || null;
 }
 
 export async function getProductById(id: string): Promise<Product | null> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data } = await supabase.from("products").select("*").eq("id", id).single();
-    return data as Product | null;
+  const db = await getDb();
+  if (db) {
+    const doc = await db.collection("products").findOne({ _id: toObjectId(id) });
+    return doc ? (serialize(doc) as unknown as Product) : null;
   }
   return mockProducts.find((p) => p.id === id) || null;
 }
@@ -73,26 +69,25 @@ export async function adjustProductStock(
   delta: number,
   reason: string
 ): Promise<Product> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
+  const db = await getDb();
+  if (db) {
     const product = await getProductById(productId);
     if (!product) throw new Error("Product not found");
     const newQty = Math.max(0, product.stock_quantity + delta);
-    const { data, error } = await supabase
-      .from("products")
-      .update({ stock_quantity: newQty, updated_at: new Date().toISOString() })
-      .eq("id", productId)
-      .select()
-      .single();
-    if (error) throw error;
-    await supabase.from("inventory").insert({
+    const _id = toObjectId(productId);
+    await db
+      .collection("products")
+      .updateOne({ _id }, { $set: { stock_quantity: newQty, updated_at: new Date().toISOString() } });
+    await db.collection("inventory").insertOne({
       product_id: productId,
       change_amount: delta,
       previous_quantity: product.stock_quantity,
       new_quantity: newQty,
       reason,
+      created_at: new Date().toISOString(),
     });
-    return data as Product;
+    const updated = await getProductById(productId);
+    return updated!;
   }
 
   const idx = mockProducts.findIndex((p) => p.id === productId);
@@ -158,29 +153,37 @@ export async function createOrderFromCart(input: CreateOrderInput): Promise<Orde
     });
   }
 
-  const supabase = await getSupabaseServer();
-  if (supabase) {
+  const db = await getDb();
+  if (db) {
     const orderNumber = `FBI-ORD-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
-    const { data: order, error } = await supabase
-      .from("orders")
-      .insert({
-        order_number: orderNumber,
-        buyer_name: input.buyer_name,
-        buyer_company: input.buyer_company ?? null,
-        buyer_email: input.buyer_email,
-        buyer_country: input.buyer_country,
-        status: "pending",
-        total_amount: total,
-        currency: input.currency ?? "USD",
-        shipping_address: input.shipping_address ?? null,
-      })
-      .select()
-      .single();
-    if (error) throw error;
-    await supabase.from("order_items").insert(
-      lineItems.map((li) => ({ ...li, order_id: (order as Order).id }))
-    );
-    return order as Order;
+    const now = new Date().toISOString();
+    const orderDoc = {
+      order_number: orderNumber,
+      buyer_name: input.buyer_name,
+      buyer_company: input.buyer_company ?? null,
+      buyer_email: input.buyer_email,
+      buyer_country: input.buyer_country,
+      status: "pending" as const,
+      total_amount: total,
+      currency: input.currency ?? "USD",
+      shipping_address: input.shipping_address ?? null,
+      tracking_number: null as string | null,
+      notes: null as string | null,
+      created_at: now,
+      updated_at: now,
+    };
+    const insertResult = await db.collection("orders").insertOne(orderDoc);
+    const orderId = insertResult.insertedId.toString();
+    if (lineItems.length) {
+      await db.collection("order_items").insertMany(
+        lineItems.map((li) => {
+          const { id, ...rest } = li;
+          void id;
+          return { ...rest, order_id: orderId };
+        })
+      );
+    }
+    return { ...orderDoc, id: orderId };
   }
 
   const orderId = String(Date.now());
@@ -208,47 +211,52 @@ export async function createOrderFromCart(input: CreateOrderInput): Promise<Orde
 }
 
 export async function getAllProducts(): Promise<Product[]> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data } = await supabase.from("products").select("*").order("created_at", { ascending: false });
-    return (data as Product[]) || [];
+  const db = await getDb();
+  if (db) {
+    const docs = await db.collection("products").find({}).sort({ created_at: -1 }).toArray();
+    return serializeAll(docs) as unknown as Product[];
   }
   return mockProducts;
 }
 
 export async function getCollections(): Promise<Collection[]> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data } = await supabase.from("collections").select("*").eq("status", "active").order("sort_order");
-    return (data as Collection[]) || [];
+  const db = await getDb();
+  if (db) {
+    const docs = await db
+      .collection("collections")
+      .find({ status: "active" })
+      .sort({ sort_order: 1 })
+      .toArray();
+    return serializeAll(docs) as unknown as Collection[];
   }
   return mockCollections.filter((c) => c.status === "active");
 }
 
 export async function getCollectionBySlug(slug: string): Promise<Collection | null> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data } = await supabase.from("collections").select("*").eq("slug", slug).single();
-    return data as Collection | null;
+  const db = await getDb();
+  if (db) {
+    const doc = await db.collection("collections").findOne({ slug });
+    return doc ? (serialize(doc) as unknown as Collection) : null;
   }
   return mockCollections.find((c) => c.slug === slug) || null;
 }
 
 export async function getAllCollections(): Promise<Collection[]> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data } = await supabase.from("collections").select("*").order("sort_order");
-    return (data as Collection[]) || [];
+  const db = await getDb();
+  if (db) {
+    const docs = await db.collection("collections").find({}).sort({ sort_order: 1 }).toArray();
+    return serializeAll(docs) as unknown as Collection[];
   }
   return mockCollections;
 }
 
 export async function createCollection(collection: Partial<Collection>): Promise<Collection> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data, error } = await supabase.from("collections").insert(collection).select().single();
-    if (error) throw error;
-    return data as Collection;
+  const db = await getDb();
+  if (db) {
+    const now = new Date().toISOString();
+    const doc = { ...collection, created_at: now, updated_at: now };
+    const result = await db.collection("collections").insertOne(doc);
+    return { ...doc, id: result.insertedId.toString() } as Collection;
   }
   const newCollection = {
     ...collection,
@@ -261,16 +269,13 @@ export async function createCollection(collection: Partial<Collection>): Promise
 }
 
 export async function updateCollection(id: string, updates: Partial<Collection>): Promise<Collection> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("collections")
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select()
-      .single();
-    if (error) throw error;
-    return data as Collection;
+  const db = await getDb();
+  if (db) {
+    const _id = toObjectId(id);
+    const updated_at = new Date().toISOString();
+    await db.collection("collections").updateOne({ _id }, { $set: { ...updates, updated_at } });
+    const doc = await db.collection("collections").findOne({ _id });
+    return serialize(doc!) as unknown as Collection;
   }
   const idx = mockCollections.findIndex((c) => c.id === id);
   if (idx >= 0) {
@@ -280,10 +285,9 @@ export async function updateCollection(id: string, updates: Partial<Collection>)
 }
 
 export async function deleteCollection(id: string): Promise<void> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { error } = await supabase.from("collections").delete().eq("id", id);
-    if (error) throw error;
+  const db = await getDb();
+  if (db) {
+    await db.collection("collections").deleteOne({ _id: toObjectId(id) });
     return;
   }
   const idx = mockCollections.findIndex((c) => c.id === id);
@@ -291,28 +295,28 @@ export async function deleteCollection(id: string): Promise<void> {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data } = await supabase.from("categories").select("*").order("sort_order");
-    return (data as Category[]) || [];
+  const db = await getDb();
+  if (db) {
+    const docs = await db.collection("categories").find({}).sort({ sort_order: 1 }).toArray();
+    return serializeAll(docs) as unknown as Category[];
   }
   return mockCategories;
 }
 
 export async function getInquiries(): Promise<Inquiry[]> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data } = await supabase.from("inquiries").select("*").order("created_at", { ascending: false });
-    return (data as Inquiry[]) || [];
+  const db = await getDb();
+  if (db) {
+    const docs = await db.collection("inquiries").find({}).sort({ created_at: -1 }).toArray();
+    return serializeAll(docs) as unknown as Inquiry[];
   }
   return mockInquiries;
 }
 
 export async function getOrders(): Promise<Order[]> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
-    return (data as Order[]) || [];
+  const db = await getDb();
+  if (db) {
+    const docs = await db.collection("orders").find({}).sort({ created_at: -1 }).toArray();
+    return serializeAll(docs) as unknown as Order[];
   }
   return mockOrders;
 }
@@ -321,16 +325,13 @@ export async function updateOrderStatus(
   id: string,
   updates: { status?: Order["status"]; tracking_number?: string | null; notes?: string | null }
 ): Promise<Order | null> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("orders")
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select()
-      .single();
-    if (error) throw error;
-    return data as Order;
+  const db = await getDb();
+  if (db) {
+    const _id = toObjectId(id);
+    const updated_at = new Date().toISOString();
+    await db.collection("orders").updateOne({ _id }, { $set: { ...updates, updated_at } });
+    const doc = await db.collection("orders").findOne({ _id });
+    return doc ? (serialize(doc) as unknown as Order) : null;
   }
   const idx = mockOrders.findIndex((o) => o.id === id);
   if (idx < 0) return null;
@@ -343,44 +344,50 @@ export async function updateOrderStatus(
 }
 
 export async function getAllOrderItems(): Promise<OrderItem[]> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data } = await supabase.from("order_items").select("*");
-    return (data as OrderItem[]) || [];
+  const db = await getDb();
+  if (db) {
+    const docs = await db.collection("order_items").find({}).toArray();
+    return serializeAll(docs) as unknown as OrderItem[];
   }
   return mockOrderItems;
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const [products, collections, inquiries, orders] = await Promise.all([
-      supabase.from("products").select("id, stock_quantity, low_stock_threshold", { count: "exact" }),
-      supabase.from("collections").select("id", { count: "exact" }),
-      supabase.from("inquiries").select("id, status", { count: "exact" }),
-      supabase.from("orders").select("total_amount", { count: "exact" }),
+  const db = await getDb();
+  if (db) {
+    const [products, totalCollections, totalInquiries, orders, pendingInquiries] = await Promise.all([
+      db
+        .collection("products")
+        .find({}, { projection: { stock_quantity: 1, low_stock_threshold: 1 } })
+        .toArray(),
+      db.collection("collections").countDocuments(),
+      db.collection("inquiries").countDocuments(),
+      db.collection("orders").find({}, { projection: { total_amount: 1 } }).toArray(),
+      db.collection("inquiries").countDocuments({ status: "new" }),
     ]);
-    const productData = (products.data || []) as Product[];
     return {
-      totalProducts: products.count || 0,
-      totalCollections: collections.count || 0,
-      totalInquiries: inquiries.count || 0,
-      totalOrders: orders.count || 0,
-      lowStockCount: productData.filter((p) => p.stock_quantity > 0 && p.stock_quantity <= p.low_stock_threshold).length,
-      outOfStockCount: productData.filter((p) => p.stock_quantity === 0).length,
-      revenue: (orders.data || []).reduce((sum: number, o: { total_amount: number }) => sum + o.total_amount, 0),
-      pendingInquiries: ((inquiries.data || []) as Inquiry[]).filter((i) => i.status === "new").length,
+      totalProducts: products.length,
+      totalCollections,
+      totalInquiries,
+      totalOrders: orders.length,
+      lowStockCount: products.filter(
+        (p) => p.stock_quantity > 0 && p.stock_quantity <= p.low_stock_threshold
+      ).length,
+      outOfStockCount: products.filter((p) => p.stock_quantity === 0).length,
+      revenue: orders.reduce((sum: number, o) => sum + (o.total_amount || 0), 0),
+      pendingInquiries,
     };
   }
   return mockDashboardStats;
 }
 
 export async function createInquiry(data: Omit<Inquiry, "id" | "status" | "notes" | "assigned_to" | "created_at" | "updated_at">) {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data: result, error } = await supabase.from("inquiries").insert(data).select().single();
-    if (error) throw error;
-    return result as Inquiry;
+  const db = await getDb();
+  if (db) {
+    const now = new Date().toISOString();
+    const doc = { ...data, status: "new" as const, notes: null, assigned_to: null, created_at: now, updated_at: now };
+    const result = await db.collection("inquiries").insertOne(doc);
+    return { ...doc, id: result.insertedId.toString() } as Inquiry;
   }
   const inquiry: Inquiry = {
     ...data,
@@ -399,16 +406,13 @@ export async function updateInquiry(
   id: string,
   updates: { status?: InquiryStatus; notes?: string }
 ): Promise<Inquiry | null> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("inquiries")
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select()
-      .single();
-    if (error) throw error;
-    return data as Inquiry;
+  const db = await getDb();
+  if (db) {
+    const _id = toObjectId(id);
+    const updated_at = new Date().toISOString();
+    await db.collection("inquiries").updateOne({ _id }, { $set: { ...updates, updated_at } });
+    const doc = await db.collection("inquiries").findOne({ _id });
+    return doc ? (serialize(doc) as unknown as Inquiry) : null;
   }
   const idx = mockInquiries.findIndex((i) => i.id === id);
   if (idx < 0) return null;
@@ -421,42 +425,37 @@ export async function updateInquiry(
 }
 
 export async function getMedia(): Promise<Media[]> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data } = await supabase.from("media").select("*").order("created_at", { ascending: false });
-    return (data as Media[]) || [];
+  const db = await getDb();
+  if (db) {
+    const docs = await db.collection("media").find({}).sort({ created_at: -1 }).toArray();
+    return serializeAll(docs) as unknown as Media[];
   }
   return [];
 }
 
-/** Deletes the DB row and, when Supabase is configured, the backing Storage object. */
+/** Deletes the DB row and, when Cloudinary is configured, the backing asset. */
 export async function deleteMedia(id: string): Promise<void> {
-  const supabase = await getSupabaseServer();
-  if (!supabase) return;
+  const db = await getDb();
+  if (!db) return;
 
-  const { data: row } = await supabase.from("media").select("url").eq("id", id).single();
-  const url = (row as { url?: string } | null)?.url;
-  const marker = "/object/public/media/";
-  const path = url?.includes(marker) ? url.split(marker)[1] : null;
-  if (path) {
-    await supabase.storage.from("media").remove([path]);
+  const _id = toObjectId(id);
+  const doc = await db.collection("media").findOne({ _id });
+  const publicId = (doc as { cloudinary_public_id?: string } | null)?.cloudinary_public_id;
+  const resourceType = (doc as { cloudinary_resource_type?: "image" | "video" } | null)?.cloudinary_resource_type;
+  if (publicId) {
+    await deleteFromCloudinary(publicId, resourceType || "image");
   }
-  const { error } = await supabase.from("media").delete().eq("id", id);
-  if (error) throw error;
+  await db.collection("media").deleteOne({ _id });
 }
 
 export async function createContactMessage(
   data: Omit<ContactMessage, "id" | "created_at">
 ): Promise<ContactMessage> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data: result, error } = await supabase
-      .from("contact_messages")
-      .insert(data)
-      .select()
-      .single();
-    if (error) throw error;
-    return result as ContactMessage;
+  const db = await getDb();
+  if (db) {
+    const doc = { ...data, created_at: new Date().toISOString() };
+    const result = await db.collection("contact_messages").insertOne(doc);
+    return { ...doc, id: result.insertedId.toString() } as ContactMessage;
   }
   const message: ContactMessage = {
     ...data,
@@ -468,23 +467,19 @@ export async function createContactMessage(
 }
 
 export async function getContactMessages(): Promise<ContactMessage[]> {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data } = await supabase
-      .from("contact_messages")
-      .select("*")
-      .order("created_at", { ascending: false });
-    return (data as ContactMessage[]) || [];
+  const db = await getDb();
+  if (db) {
+    const docs = await db.collection("contact_messages").find({}).sort({ created_at: -1 }).toArray();
+    return serializeAll(docs) as unknown as ContactMessage[];
   }
   return mockContactMessages;
 }
 
 export async function createProduct(product: Partial<Product>) {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data, error } = await supabase.from("products").insert(product).select().single();
-    if (error) throw error;
-    return data as Product;
+  const db = await getDb();
+  if (db) {
+    const result = await db.collection("products").insertOne(product);
+    return { ...product, id: result.insertedId.toString() } as Product;
   }
   const newProduct = { ...product, id: String(Date.now()) } as Product;
   mockProducts.unshift(newProduct);
@@ -492,11 +487,12 @@ export async function createProduct(product: Partial<Product>) {
 }
 
 export async function updateProduct(id: string, updates: Partial<Product>) {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { data, error } = await supabase.from("products").update(updates).eq("id", id).select().single();
-    if (error) throw error;
-    return data as Product;
+  const db = await getDb();
+  if (db) {
+    const _id = toObjectId(id);
+    await db.collection("products").updateOne({ _id }, { $set: updates });
+    const doc = await db.collection("products").findOne({ _id });
+    return serialize(doc!) as unknown as Product;
   }
   const idx = mockProducts.findIndex((p) => p.id === id);
   if (idx >= 0) mockProducts[idx] = { ...mockProducts[idx], ...updates };
@@ -504,10 +500,9 @@ export async function updateProduct(id: string, updates: Partial<Product>) {
 }
 
 export async function deleteProduct(id: string) {
-  const supabase = await getSupabaseServer();
-  if (supabase) {
-    const { error } = await supabase.from("products").delete().eq("id", id);
-    if (error) throw error;
+  const db = await getDb();
+  if (db) {
+    await db.collection("products").deleteOne({ _id: toObjectId(id) });
     return;
   }
   const idx = mockProducts.findIndex((p) => p.id === id);

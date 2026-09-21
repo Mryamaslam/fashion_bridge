@@ -1,4 +1,4 @@
-# Deploy live site to Vercel with Supabase (real DB, not mock).
+# Deploy live site to Vercel with MongoDB (real DB, not mock).
 # Run once: npx vercel login
 # Then: .\scripts\deploy-vercel-live.ps1
 
@@ -6,7 +6,7 @@ $ErrorActionPreference = "Stop"
 
 $envFile = Join-Path $PSScriptRoot ".." ".env.local" | Resolve-Path
 if (-not (Test-Path $envFile)) {
-  Write-Host "Missing .env.local — add Supabase URL and publishable key first." -ForegroundColor Red
+  Write-Host "Missing .env.local — add MONGODB_URI and the other backend vars first." -ForegroundColor Red
   exit 1
 }
 
@@ -18,8 +18,8 @@ Get-Content $envFile | ForEach-Object {
   }
 }
 
-if (-not $env:NEXT_PUBLIC_SUPABASE_URL -or $env:NEXT_PUBLIC_SUPABASE_URL -match "YOUR_PROJECT") {
-  Write-Host "Set NEXT_PUBLIC_SUPABASE_URL in .env.local first." -ForegroundColor Red
+if (-not $env:MONGODB_URI) {
+  Write-Host "Set MONGODB_URI in .env.local first." -ForegroundColor Red
   exit 1
 }
 
@@ -34,17 +34,16 @@ function Set-VercelEnv($name, $value) {
   $value | npx vercel env add $name development --force 2>$null
 }
 
-Set-VercelEnv "NEXT_PUBLIC_SUPABASE_URL" $env:NEXT_PUBLIC_SUPABASE_URL
-Set-VercelEnv "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY" $env:NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-Set-VercelEnv "SUPABASE_SECRET_KEY" $env:SUPABASE_SECRET_KEY
+Set-VercelEnv "MONGODB_URI" $env:MONGODB_URI
+Set-VercelEnv "MONGODB_DB_NAME" $env:MONGODB_DB_NAME
+Set-VercelEnv "AUTH_SECRET" $env:AUTH_SECRET
+Set-VercelEnv "CLOUDINARY_CLOUD_NAME" $env:CLOUDINARY_CLOUD_NAME
+Set-VercelEnv "CLOUDINARY_API_KEY" $env:CLOUDINARY_API_KEY
+Set-VercelEnv "CLOUDINARY_API_SECRET" $env:CLOUDINARY_API_SECRET
 
 Write-Host "Deploying production..." -ForegroundColor Cyan
 npx vercel --prod --yes
 
 Write-Host ""
 Write-Host "Done. Copy the production URL from above." -ForegroundColor Green
-Write-Host "Then in Supabase → Authentication → URL Configuration:" -ForegroundColor Yellow
-Write-Host "  Site URL = your Vercel URL"
-Write-Host "  Redirect URLs = your Vercel URL/**"
-Write-Host ""
 Write-Host "Set NEXT_PUBLIC_SITE_URL to the same Vercel URL in .env.local and redeploy once."

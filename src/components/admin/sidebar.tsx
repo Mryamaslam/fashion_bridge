@@ -11,8 +11,6 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IS_STATIC_EXPORT, clearDemoAdminAuth } from "@/lib/constants/static-export";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
@@ -32,12 +30,6 @@ export function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = async () => {
-    if (IS_STATIC_EXPORT && isSupabaseConfigured()) {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      window.location.href = "/admin/login/";
-      return;
-    }
     if (IS_STATIC_EXPORT) {
       clearDemoAdminAuth();
       window.location.href = "/admin/login/";

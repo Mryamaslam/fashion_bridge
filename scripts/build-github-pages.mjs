@@ -17,11 +17,6 @@ try {
     GITHUB_PAGES: "true",
     NEXT_PUBLIC_STATIC_EXPORT: "true",
     NEXT_PUBLIC_SITE_URL: "https://mryamaslam.github.io/fashion_bridge",
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-      "",
   };
 
   const result = spawnSync("npx", ["next", "build"], {

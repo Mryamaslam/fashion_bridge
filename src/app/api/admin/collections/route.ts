@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createCollection } from "@/lib/services/data";
 import { collectionSchema } from "@/lib/validations/schemas";
 import { slugify } from "@/lib/utils";
-import { requireAdmin } from "@/lib/supabase/require-admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export async function POST(request: Request) {
   const unauthorized = await requireAdmin();

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getContactMessages } from "@/lib/services/data";
-import { requireAdmin } from "@/lib/supabase/require-admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export async function GET() {
   const unauthorized = await requireAdmin();

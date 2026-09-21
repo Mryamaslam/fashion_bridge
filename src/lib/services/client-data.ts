@@ -10,8 +10,6 @@ import {
   mockCollections,
 } from "@/lib/data/mock";
 import { filterProducts, paginate } from "@/lib/services/product-filters";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
-import * as sb from "@/lib/services/supabase-browser-data";
 import type {
   Product,
   ProductFilters,
@@ -28,14 +26,17 @@ import type {
   Category,
 } from "@/types";
 
-const isSupabaseMode = () => isSupabaseConfigured();
+/**
+ * GitHub Pages is a static export with no server, so this layer always
+ * serves in-memory demo data there — the live app (Vercel) reads/writes
+ * MongoDB through the /api routes instead (see src/hooks/use-data.ts).
+ */
 
 export function getClientProducts(
   filters: ProductFilters = {},
   page = 1,
   pageSize = 24
-): PaginatedResponse<Product> | Promise<PaginatedResponse<Product>> {
-  if (isSupabaseMode()) return sb.fetchProductsPage(filters, page, pageSize);
+): PaginatedResponse<Product> {
   const base = filters.status
     ? mockProducts.filter((p) => p.status === filters.status)
     : mockProducts.filter((p) => p.status === "active");
@@ -43,53 +44,43 @@ export function getClientProducts(
   return paginate(filtered, page, pageSize);
 }
 
-export function getClientAllProducts(): Product[] | Promise<Product[]> {
-  if (isSupabaseMode()) return sb.fetchAllProducts();
+export function getClientAllProducts(): Product[] {
   return mockProducts;
 }
 
-export function getClientFeaturedProducts(limit = 4): Product[] | Promise<Product[]> {
-  if (isSupabaseMode()) return sb.fetchFeaturedProducts(limit);
+export function getClientFeaturedProducts(limit = 4): Product[] {
   return mockProducts.filter((p) => p.is_featured && p.status === "active").slice(0, limit);
 }
 
-export function getClientCollections(): Collection[] | Promise<Collection[]> {
-  if (isSupabaseMode()) return sb.fetchCollections(true);
+export function getClientCollections(): Collection[] {
   return mockCollections.filter((c) => c.status === "active");
 }
 
-export function getClientCategories(): Category[] | Promise<Category[]> {
-  if (isSupabaseMode()) return sb.fetchCategories();
+export function getClientCategories(): Category[] {
   return mockCategories;
 }
 
-export function getClientAllCollections(): Collection[] | Promise<Collection[]> {
-  if (isSupabaseMode()) return sb.fetchCollections(false);
+export function getClientAllCollections(): Collection[] {
   return mockCollections;
 }
 
 export function getClientCollectionBySlug(slug: string) {
-  if (isSupabaseMode()) return sb.fetchCollectionBySlug(slug);
   return mockCollections.find((c) => c.slug === slug) || null;
 }
 
 export function getClientProductsByCollection(collectionId: string) {
-  if (isSupabaseMode()) return sb.fetchProductsByCollection(collectionId);
   return mockProducts.filter((p) => p.collection_id === collectionId && p.status === "active");
 }
 
 export function getClientProductBySlug(slug: string) {
-  if (isSupabaseMode()) return sb.fetchProductBySlug(slug);
   return mockProducts.find((p) => p.slug === slug) || null;
 }
 
-export function getClientDashboardStats(): DashboardStats | Promise<DashboardStats> {
-  if (isSupabaseMode()) return sb.fetchDashboardStats();
+export function getClientDashboardStats(): DashboardStats {
   return mockDashboardStats;
 }
 
-export function getClientInquiries(): Inquiry[] | Promise<Inquiry[]> {
-  if (isSupabaseMode()) return sb.fetchInquiries();
+export function getClientInquiries(): Inquiry[] {
   return mockInquiries;
 }
 
@@ -98,7 +89,6 @@ function delay(ms: number) {
 }
 
 export async function submitClientInquiry(data: Record<string, unknown>) {
-  if (isSupabaseMode()) return sb.insertInquiry(data);
   await delay(400);
   const inquiry = {
     ...data,
@@ -114,7 +104,6 @@ export async function submitClientInquiry(data: Record<string, unknown>) {
 }
 
 export async function submitClientContact(data: Record<string, unknown>) {
-  if (isSupabaseMode()) return sb.insertContactMessage(data);
   await delay(400);
   const message = {
     ...data,
@@ -125,8 +114,7 @@ export async function submitClientContact(data: Record<string, unknown>) {
   return message;
 }
 
-export function getClientContactMessages(): ContactMessage[] | Promise<ContactMessage[]> {
-  if (isSupabaseMode()) return sb.fetchContactMessages();
+export function getClientContactMessages(): ContactMessage[] {
   return mockContactMessages;
 }
 
@@ -137,7 +125,6 @@ export async function submitClientOrder(items: unknown[]) {
 }
 
 export async function createClientProduct(data: Partial<Product>) {
-  if (isSupabaseMode()) return sb.insertProduct(data);
   await delay(300);
   const product = { ...data, id: String(Date.now()) } as Product;
   mockProducts.unshift(product);
@@ -145,7 +132,6 @@ export async function createClientProduct(data: Partial<Product>) {
 }
 
 export async function updateClientProduct(id: string, data: Partial<Product>) {
-  if (isSupabaseMode()) return sb.patchProduct(id, data);
   await delay(300);
   const idx = mockProducts.findIndex((p) => p.id === id);
   if (idx >= 0) mockProducts[idx] = { ...mockProducts[idx], ...data };
@@ -153,7 +139,6 @@ export async function updateClientProduct(id: string, data: Partial<Product>) {
 }
 
 export async function deleteClientProduct(id: string) {
-  if (isSupabaseMode()) return sb.removeProduct(id);
   await delay(300);
   const idx = mockProducts.findIndex((p) => p.id === id);
   if (idx >= 0) mockProducts.splice(idx, 1);
@@ -163,7 +148,6 @@ export async function updateClientInquiry(
   id: string,
   data: { status?: InquiryStatus; notes?: string }
 ) {
-  if (isSupabaseMode()) return sb.patchInquiry(id, data);
   await delay(300);
   const idx = mockInquiries.findIndex((i) => i.id === id);
   if (idx >= 0) {
@@ -177,7 +161,6 @@ export async function updateClientInquiry(
 }
 
 export async function createClientCollection(data: Partial<Collection>) {
-  if (isSupabaseMode()) return sb.insertCollection(data);
   await delay(300);
   const collection = {
     ...data,
@@ -190,7 +173,6 @@ export async function createClientCollection(data: Partial<Collection>) {
 }
 
 export async function updateClientCollection(id: string, data: Partial<Collection>) {
-  if (isSupabaseMode()) return sb.patchCollection(id, data);
   await delay(300);
   const idx = mockCollections.findIndex((c) => c.id === id);
   if (idx >= 0) {
@@ -200,19 +182,16 @@ export async function updateClientCollection(id: string, data: Partial<Collectio
 }
 
 export async function deleteClientCollection(id: string) {
-  if (isSupabaseMode()) return sb.removeCollection(id);
   await delay(300);
   const idx = mockCollections.findIndex((c) => c.id === id);
   if (idx >= 0) mockCollections.splice(idx, 1);
 }
 
-export function getClientMedia(): Media[] | Promise<Media[]> {
-  if (isSupabaseMode()) return sb.fetchMedia();
+export function getClientMedia(): Media[] {
   return mockMedia;
 }
 
 export async function uploadClientMedia(file: File, folder = "general") {
-  if (isSupabaseMode()) return sb.uploadMedia(file, folder);
   await delay(300);
   const media: Media = {
     id: String(Date.now() + Math.random()),
@@ -230,19 +209,16 @@ export async function uploadClientMedia(file: File, folder = "general") {
 }
 
 export async function deleteClientMedia(id: string) {
-  if (isSupabaseMode()) return sb.removeMedia(id);
   await delay(200);
   const idx = mockMedia.findIndex((m) => m.id === id);
   if (idx >= 0) mockMedia.splice(idx, 1);
 }
 
-export function getClientOrders(): Order[] | Promise<Order[]> {
-  if (isSupabaseMode()) return sb.fetchOrders();
+export function getClientOrders(): Order[] {
   return mockOrders;
 }
 
-export function getClientOrderItems(): OrderItem[] | Promise<OrderItem[]> {
-  if (isSupabaseMode()) return sb.fetchOrderItems();
+export function getClientOrderItems(): OrderItem[] {
   return mockOrderItems;
 }
 
@@ -250,7 +226,6 @@ export async function updateClientOrder(
   id: string,
   data: { status?: OrderStatus; tracking_number?: string | null; notes?: string | null }
 ) {
-  if (isSupabaseMode()) return sb.patchOrder(id, data);
   await delay(300);
   const idx = mockOrders.findIndex((o) => o.id === id);
   if (idx >= 0) {
@@ -260,9 +235,5 @@ export async function updateClientOrder(
 }
 
 export async function getClientCategoryName(categoryId: string | null): Promise<string | undefined> {
-  if (isSupabaseMode()) {
-    const categories = await sb.fetchCategories();
-    return sb.getCategoryNameFromList(categoryId, categories);
-  }
   return mockCategories.find((c) => c.id === categoryId)?.name;
 }

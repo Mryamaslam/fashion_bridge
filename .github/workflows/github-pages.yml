@@ -58,8 +58,6 @@ jobs:
           GITHUB_PAGES: "true"
           NEXT_PUBLIC_STATIC_EXPORT: "true"
           NEXT_PUBLIC_SITE_URL: https://mryamaslam.github.io/fashion_bridge
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
 
       - name: Verify export output
         run: node scripts/verify-github-pages.mjs

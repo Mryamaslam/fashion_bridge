@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAllProducts, createProduct } from "@/lib/services/data";
 import { productSchema } from "@/lib/validations/schemas";
 import { slugify, generateSKU } from "@/lib/utils";
-import { requireAdmin } from "@/lib/supabase/require-admin";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export async function GET() {
   const unauthorized = await requireAdmin();

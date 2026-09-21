@@ -1,6 +1,6 @@
 # Fashion Bridge International
 
-Premium B2B fashion export platform built with Next.js 15, TypeScript, Tailwind CSS, Supabase, and React Query.
+Premium B2B fashion export platform built with Next.js 15, TypeScript, Tailwind CSS, MongoDB, and React Query.
 
 ## Tech Stack
 
@@ -9,7 +9,7 @@ Premium B2B fashion export platform built with Next.js 15, TypeScript, Tailwind 
 - **Tailwind CSS v4**
 - **Shadcn UI** (Radix primitives)
 - **Framer Motion**
-- **Supabase** (Database, Auth, Storage)
+- **MongoDB** (Database), custom JWT admin auth, **Cloudinary** (media storage)
 - **React Query** (TanStack Query)
 - **Recharts** (Analytics)
 
@@ -29,12 +29,18 @@ Open [http://localhost:3000](http://localhost:3000)
 - Email: `admin@fashionbridge.com`
 - Password: `admin123`
 
-## Supabase Setup
+## MongoDB + Cloudinary Setup
 
-1. Create a Supabase project at [supabase.com](https://supabase.com)
-2. Run `supabase/schema.sql` in the SQL Editor
-3. Copy your project URL and keys to `.env.local`
-4. Create a `media` storage bucket (public)
+1. Create a free cluster at [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas), then Database → Connect → Drivers to get the connection string
+2. Create a free account at [cloudinary.com](https://cloudinary.com) and copy Cloud Name / API Key / API Secret from the dashboard
+3. Copy `.env.example` to `.env.local` and fill in `MONGODB_URI`, `AUTH_SECRET` (any long random string), and the `CLOUDINARY_*` values
+4. Create the first admin login:
+
+```bash
+npm run create-admin -- --email you@example.com --password "YourPassword"
+```
+
+Without `MONGODB_URI` set, the site runs in **demo mode** with mock data and the login `admin@fashionbridge.com` / `admin123`.
 
 ## Project Structure
 
@@ -53,7 +59,9 @@ src/
 │   └── admin/             # Admin-specific components
 ├── lib/
 │   ├── services/          # Data access layer
-│   ├── supabase/          # Supabase clients
+│   ├── mongodb/           # MongoDB client & serialization
+│   ├── auth/              # Admin session (JWT) & password hashing
+│   ├── cloudinary/        # Media upload/delete
 │   ├── constants/         # Site config & constants
 │   └── validations/       # Zod schemas
 ├── hooks/                 # React Query hooks
@@ -71,7 +79,7 @@ src/
 - WhatsApp integration, Google Maps
 
 ### Admin Dashboard
-- Secure authentication (Supabase Auth + demo mode)
+- Secure authentication (MongoDB + JWT sessions, or demo mode)
 - Dashboard overview with analytics charts
 - Product CRUD with duplicate & bulk operations
 - Collection, inquiry, and order management
@@ -85,34 +93,15 @@ See `.env.example` for all required variables.
 
 Live URL: **https://mryamaslam.github.io/fashion_bridge**
 
-Every push to `master` runs `.github/workflows/github-pages.yml` and publishes the site. With Supabase secrets configured (below), the live site uses your **real database** — not mock data.
-
-### Connect Supabase to GitHub Pages
-
-1. GitHub repo → **Settings** → **Secrets and variables** → **Actions**
-2. Add these **Repository secrets**:
-
-| Secret | Value |
-|--------|-------|
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://kiwutmrfmjotazmmjhky.supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | your `sb_publishable_...` key |
-
-3. Supabase Dashboard → **Authentication** → **URL Configuration**:
-   - **Site URL:** `https://mryamaslam.github.io/fashion_bridge`
-   - **Redirect URLs:** `https://mryamaslam.github.io/fashion_bridge/**`
-
-4. Push to `master` — Actions rebuilds with live Supabase data.
-
-Without secrets, the site falls back to demo mock data.
+Every push to `master` runs `.github/workflows/github-pages.yml` and publishes the site. **GitHub Pages is a static export with no server**, so it always shows demo mock data — MongoDB can't be queried safely from a static page (it would expose database credentials in the browser). The live database only powers the Vercel deployment below.
 
 ### One-time GitHub setup
 
 1. Repo → **Settings** → **Pages**
 2. **Build and deployment** → Source: **GitHub Actions** (not "Deploy from a branch")
-3. Repo → **Settings** → **Secrets and variables** → **Actions** → add Supabase secrets (see above)
-4. Push to `master` (or **Actions** → **Deploy to GitHub Pages** → **Run workflow**)
-5. First deploy: open the workflow run → approve **github-pages** environment if prompted
-6. Wait 2–3 minutes, then open: https://mryamaslam.github.io/fashion_bridge/
+3. Push to `master` (or **Actions** → **Deploy to GitHub Pages** → **Run workflow**)
+4. First deploy: open the workflow run → approve **github-pages** environment if prompted
+5. Wait 2–3 minutes, then open: https://mryamaslam.github.io/fashion_bridge/
 
 ### Local GitHub Pages build
 
@@ -120,7 +109,7 @@ Without secrets, the site falls back to demo mock data.
 npm run build:github-pages
 ```
 
-Output is in the `out/` folder. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in your shell before building for live data.
+Output is in the `out/` folder.
 
 ---
 
@@ -133,11 +122,15 @@ Live repo: [github.com/Mryamaslam/fashion_bridge](https://github.com/Mryamaslam/
 1. Connect repo at [vercel.com/new](https://vercel.com/new) → import `Mryamaslam/fashion_bridge`
 2. **Production branch:** `master` (not `main`)
 3. Framework: **Next.js** (auto-detected)
-4. Add environment variable:
+4. Add environment variables:
 
 | Variable | Value |
 |----------|-------|
-| `NEXT_PUBLIC_SITE_URL` | `https://mryamaslam.github.io/fashion_bridge` (GitHub Pages) or your Vercel URL |
+| `NEXT_PUBLIC_SITE_URL` | your Vercel URL |
+| `MONGODB_URI` | your MongoDB Atlas connection string |
+| `MONGODB_DB_NAME` | `fashion_bridge` |
+| `AUTH_SECRET` | same long random string as `.env.local` |
+| `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | from your Cloudinary dashboard |
 
 5. Every push to `master` triggers a new production deploy.
 
@@ -212,13 +205,14 @@ npm run deploy:netlify:preview
 | Variable | Value |
 |----------|-------|
 | `NEXT_PUBLIC_SITE_URL` | `https://your-site.netlify.app` |
-| `NEXT_PUBLIC_SUPABASE_URL` | (optional) Supabase URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | (optional) Supabase anon key |
+| `MONGODB_URI` | (optional) MongoDB Atlas connection string |
+| `AUTH_SECRET` | (optional) same random string as `.env.local` |
+| `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | (optional) from your Cloudinary dashboard |
 
 5. Deploy — every push to `main` auto-deploys.
 
 ### Demo mode on Netlify
 
-Without Supabase env vars, the site runs in **demo mode** with mock data.  
+Without `MONGODB_URI` set, the site runs in **demo mode** with mock data.  
 Admin login: `admin@fashionbridge.com` / `admin123`
 
